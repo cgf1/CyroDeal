@@ -1,0 +1,9 @@
+## APIVersion: 100028 100029
+## Title: CyroDoor
+## Author: |c66ffff|Valandil|r
+## Description: PVP Helper
+## SavedVariables: CyroDoorSettings
+## DependsOn: LibAddonMenu-2.0 LibMapPins-1.0 LibStub
+## OptionalDependsOn: LibSlashCommander pChat tom
+
+CyroDoor.lua
