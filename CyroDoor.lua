@@ -38,7 +38,7 @@ function mysplit(inputstr, sep)
 	if first == nil then
 	    first = str
 	else
-	    rest = rest + ' ' + str
+	    rest = rest .. ' ' .. str
 	end
     end
     return first:sub(1, 1):lower(), rest:sub(2)
@@ -106,13 +106,13 @@ function _init(_, name)
 	    name = "Cyrodiil Keep Postern",
 	    door = posterns,
 	    find = function (n) return true end,
-	    layout = {level = 200, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/postern.dds"},
+	    layout = {level = 100, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/postern.dds"},
 	},
 	{
 	    name = "Cyrodiil Keep Gatehouse",
 	    door = gatehouses,
 	    find = function (n) return true end,
-	    layout = {level = 200, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/gatehouse.dds"},
+	    layout = {level = 100, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/gatehouse.dds"},
 	}
     }
     df('posterns %s', tostring(posterns))
@@ -128,6 +128,16 @@ function _init(_, name)
 	cmp:AddCustomPin(name, function(pm) create(pm, name, find, door) end, layout)
 	cmp:RefreshPins(name)
 	df("created pins for %s, texture %s, size %d", name, layout.texture, layout.size)
+    end
+
+    SLASH_COMMANDS["/cdl"] = function(x)
+	local i = tonumber(x)
+	if i then
+	    for _, x in ipairs(where) do
+		lmp:SetLayoutKey(x.name, "level", i)
+	    end
+	    lmp:RefreshPins(nil)
+	end
     end
 
     SLASH_COMMANDS["/cdw"] = function()
