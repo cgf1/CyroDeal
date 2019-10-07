@@ -40,19 +40,8 @@ local function FormatGPSCoords(number)
     return zo_round(number*100000)
 end
 
-function mysplit(inputstr, sep)
-    if sep == nil then
-	sep = "%s"
-    end
-    local t = {}
-    for str in inputstr:gmatch("([^"..sep.."]+)") do
-	t[#t + 1] = str
-    end
-    return unpack(t)
-end
-
 --slash command ---------------------------------------------------------------
-SLASH_COMMANDS["/coords"] = function(name)
+SLASH_COMMANDS["/cdc"] = function(name)
     if SetMapToPlayerLocation() == SET_MAP_RESULT_MAP_CHANGED then
 	CALLBACK_MANAGER:FireCallbacks("OnWorldMapChanged")
     end
@@ -83,9 +72,7 @@ SLASH_COMMANDS["/coords"] = function(name)
     CHAT_SYSTEM:AddMessage(zo_strformat("Map (|cDC8122<<1>>|r): |cFFFFFF<<2>>|r\195\151|cFFFFFF<<3>>|r", mapName, x, y))
     CHAT_SYSTEM:AddMessage(zo_strformat("Zone (|cDC8122<<1>>|r): |cFFFFFF<<2>>|r\195\151|cFFFFFF<<3>>|r", zoneName, FormatCoords(zoneX), FormatCoords(zoneY)))
     CHAT_SYSTEM:AddMessage(zo_strformat("World (|cDC8122<<1>>|r): |cFFFFFF<<2>>|r\195\151|cFFFFFF<<3>>|r", worldName, FormatCoords(worldX), FormatCoords(worldY)))
-    if name:len() > 0 then
-	CyroDoor.SaveCoords(mapName, name, x, y)
-    end
+    CyroDoor.SaveCoords(mapName, name, x, y)
 end
 
 -- definition if Coord object ---------------------------------------------

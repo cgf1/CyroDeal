@@ -12,21 +12,10 @@ Name = myname
 
 local saved
 local texture
-local coords
+local gatehouses, posterns
 
 local t = "esoui/art/floatingmarkers/repeatablequest_icon_door_assisted.dds"
-local where = {
-    {
-	name = "Cyrodiil Keep Postern",
-	find = function (n) return n:find("Postern") end,
-	layout = {level = 200, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/postern.dds"},
-    },
-    {
-	name = "Cyrodiil Keep Front Gate",
-	find = function (n) return not n:find("Postern") end,
-	layout = {level = 200, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/frontgate.dds"},
-    }
-}
+local where
 
 local function color(n, r, g, b, a)
     if r then
@@ -39,21 +28,54 @@ local function color(n, r, g, b, a)
     lmp:SetLayoutKey(n, "tint", color)
 end
 
-function CyroDoor.SaveCoords(mapname, name, x, y)
-    saved.coords[mapname] = saved.coords[mapname] or {}
-    saved.coords[mapname][name] = {x, y}
+function mysplit(inputstr, sep)
+    if sep == nil then
+	sep = "%s"
+    end
+    local first
+    local rest = ''
+    for str in inputstr:gmatch("([^"..sep.."]+)") do
+	if first == nil then
+	    first = str
+	else
+	    rest = rest + ' ' + str
+	end
+    end
+    return first:sub(1, 1):lower(), rest:sub(2)
+end
+
+function CyroDoor.SaveCoords(mapname, s, x, y)
+    if mapname ~= 'Cyrodiil' then
+	return -- for now?
+    end
+    local loc = GetPlayerLocationName()
+    local doortype, text = mysplit(s)
+    local door
+    if doortype == 'p' then
+	door = posterns
+    else
+	door = gatehouses
+    end
+    local key
+    if text and text:len() > 0 then
+	key = loc .. ' ' .. text
+    else
+	key = loc
+    end
+
+    door[key] = {x, y}
     lmp:RefreshPins(nil)
     cmp:RefreshPins(nil)
 end
 
-local function create(name, what, func, coords)
+local function create(what, name, func, doortab)
     local zone = lmp:GetZoneAndSubzone()
     local CreatePin = what.CreatePin
     if zone == 'cyrodiil' then
-	for n, c in pairs(coords) do
+	for n, c in pairs(doortab) do
 	    if func(n) then
 		CreatePin(what, name, {}, unpack(c))
-		-- df("%s: created pin for '%s' at %f, %f", what.Name, n, c[1], c[2])
+		df("%s: created pin %s for '%s' at %f, %f", what.Name, name, n, c[1], c[2])
 	    end
 	end
     end
@@ -66,18 +88,46 @@ function _init(_, name)
     EVENT_MANAGER:UnregisterForEvent(name, EVENT_ADD_ON_LOADED)
     saved = ZO_SavedVars:NewAccountWide(name .. 'Saved', 1, nil, {coords = {}})
     InitCoord(saved)
-    coords = saved.coords.Cyrodiil
+    saved.doors = saved.doors or {}
+    if not saved.doors.Cyrodiil then
+	saved.doors.Cyrodiil = {}
+    end
+    local cyrodoors = saved.doors.Cyrodiil
+    if not cyrodoors.gatehouses then
+	cyrodoors.gatehouses = {}
+    end
+    if not cyrodoors.posterns then
+	cyrodoors.posterns = {}
+    end
+    gatehouses = cyrodoors.gatehouses
+    posterns = cyrodoors.posterns
+    where = {
+	{
+	    name = "Cyrodiil Keep Postern",
+	    door = posterns,
+	    find = function (n) return true end,
+	    layout = {level = 200, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/postern.dds"},
+	},
+	{
+	    name = "Cyrodiil Keep Gatehouse",
+	    door = gatehouses,
+	    find = function (n) return true end,
+	    layout = {level = 200, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/gatehouse.dds"},
+	}
+    }
+    df('posterns %s', tostring(posterns))
+    df('gatehouses %s', tostring(gatehouses))
     lmp.Name = 'LibMapPins'
     cmp.pinManager.Name = 'CustomCompassPins'
     for _, x in ipairs(where) do
-	local name, find, layout = x.name, x.find, x.layout
-	local pid = lmp:AddPinType(name, function() create(name, lmp, find, coords) end)
-	lmp:SetLayoutData(pid, x.layout)
+	local name, door, find, layout = x.name, x.door, x.find, x.layout
+	local pid = lmp:AddPinType(name, function() create(lmp, name, find, door) end)
+	lmp:SetLayoutData(pid, layout)
 	color(pid)
 
-	cmp:AddCustomPin(name, function(pm) create(name, pm, find, coords) end, layout)
+	cmp:AddCustomPin(name, function(pm) create(pm, name, find, door) end, layout)
 	cmp:RefreshPins(name)
-	-- df("created pins for %s, texture %s, size %d", name, texture, size)
+	df("created pins for %s, texture %s, size %d", name, layout.texture, layout.size)
     end
 
     SLASH_COMMANDS["/cdw"] = function()

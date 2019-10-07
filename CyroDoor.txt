@@ -10,5 +10,5 @@
 CyroDoor.lua
 Coord.lua
 Coord.xml
-icons/door.dds
-icons/gate.dds
+icons/postern.dds
+icons/gatehouse.dds
