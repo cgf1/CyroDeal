@@ -2,8 +2,13 @@
 ## Title: CyroDoor
 ## Author: |c66ffff|Valandil|r
 ## Description: PVP Helper
-## SavedVariables: CyroDoorSettings
-## DependsOn: LibAddonMenu-2.0 LibMapPins-1.0 LibStub
+## AddonVersion 0100
+## DependsOn: LibAddonMenu-2.0 LibMapPins-1.0 LibStub LibGPS
+## SavedVariables: CyroDoorSaved CustomCompassPins
 ## OptionalDependsOn: LibSlashCommander pChat tom
 
 CyroDoor.lua
+Coord.lua
+Coord.xml
+icons/door.dds
+icons/gate.dds
