@@ -19,12 +19,12 @@ local where = {
     {
 	name = "Cyrodiil Keep Postern",
 	find = function (n) return n:find("Postern") end,
-	layout = {level = 200, maxDistance = 0.05, size = 4, texture = "CyroDoor/icons/postern.dds"},
+	layout = {level = 200, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/postern.dds"},
     },
     {
 	name = "Cyrodiil Keep Front Gate",
 	find = function (n) return not n:find("Postern") end,
-	layout = {level = 200, maxDistance = 0.05, size = 8, texture = "CyroDoor/icons/frontgate.dds"},
+	layout = {level = 200, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/frontgate.dds"},
     }
 }
 
@@ -37,9 +37,14 @@ local function color(n, r, g, b, a)
     -- df("%s: color %d, %d, %d, %d", n, unpack(saved.color))
     local color = ZO_ColorDef:New(unpack(saved.color))
     lmp:SetLayoutKey(n, "tint", color)
-    -- lmp:RefreshPins(n)
 end
 
+function CyroDoor.SaveCoords(mapname, name, x, y)
+    saved.coords[mapname] = saved.coords[mapname] or {}
+    saved.coords[mapname][name] = {x, y}
+    lmp:RefreshPins(nil)
+    cmp:RefreshPins(nil)
+end
 
 local function create(name, what, func, coords)
     local zone = lmp:GetZoneAndSubzone()
