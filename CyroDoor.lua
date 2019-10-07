@@ -1,4 +1,5 @@
 local lmp = LibStub("LibMapPins-1.0")
+local cmp = COMPASS_PINS
 local x = {
     __index = _G,
 }
@@ -15,65 +16,30 @@ local xxx
 
 local texture
 
-local doors = {
+local posterns = {
+"CyroDoor/icons/archway1.dds",
+"CyroDoor/icons/archway2.dds",
+"CyroDoor/icons/archway3.dds",
+"CyroDoor/icons/archway4.dds",
 "CyroDoor/icons/door.dds",
-"art/fx/texture/sigil_icdoor_boneshard.dds",
-"art/fx/texture/sigil_icdoor_darkether.dds",
-"art/fx/texture/sigil_icdoor_motl.dds",
-"art/fx/texture/sigil_icdoor_tinyclaw.dds",
-"art/fx/texture/sigil_icdoor_tooth.dds",
-"art/fx/texture/sigil_icpdoor_daedricshackles.dds",
-"art/fx/texture/sigil_imperialcitydoor.dds",
-"art/fx/texture/sigil_spellcraftingdoor.dds",
-"art/fx/texture/sigil_wgtdoor_daedricembers.dds",
-"art/fx/texture/modelfxtextures/mq6_rockwalldoorlava_d.dds",
-"art/fx/texture/modelfxtextures/mq6_rockwalldoorlava_n.dds",
-"art/fx/texture/modelfxtextures/mq6_rockwalldoormelt_bw.dds",
-"art/fx/texture/modelfxtextures/mq6_rockwalldoormelt_d.dds",
-"art/fx/texture/modelfxtextures/mq6_rockwalldoormelt_n.dds",
-"art/fx/texture/modelfxtextures/mq6_rockwalldoor_d.dds",
-"art/fx/texture/modelfxtextures/mq6_rockwalldoor_n.dds",
-"art/fx/texture/modelfxtextures/xanmeerdoorglow.dds",
-"art/icons/housing_arg_str_dbhdoor001.dds",
-"art/icons/housing_ayl_duc_bookcasedoorlarge002.dds",
-"art/icons/housing_ayl_duc_bookcasedoorsmall001.dds",
-"art/icons/housing_bre_str_doorlocklrg001.dds",
-"art/icons/housing_bre_str_doorlocklrggate001.dds",
-"art/icons/housing_bre_str_doorlocksmll001.dds",
-"art/icons/housing_col_inc_dbhkegdoor001.dds",
-"art/icons/housing_col_str_dbhdoor001.dds",
-"art/icons/housing_gen_inc_soulgemdoormarkerssmall001.dds",
-"art/icons/housing_gen_inc_soulgemdoormarkerssmall002.dds",
-"art/icons/housing_gen_inc_soulgemdoormarkerssmall003.dds",
-"art/icons/housing_orc_duc_puzzledoorplatebagrakh001.dds",
-"art/icons/housing_orc_duc_puzzledoorplatefharhun001.dds",
-"art/icons/housing_orc_duc_puzzledoorplateigron001.dds",
-"art/icons/housing_orc_duc_puzzledoorplatemorkul001.dds",
-"art/icons/housing_orc_duc_puzzledoorplateshatul001.dds",
-"art/icons/housing_orc_duc_puzzledoorplatetumnosh001.dds",
-"art/icons/housing_orc_duc_puzzledoorweight002.dds",
-"art/icons/housing_red_duc_yokudanpuzzledoortumbler001.dds",
-"art/icons/housing_vrd_duc_standdooraltar001.dds",
-"art/icons/housing_vrd_fur_hlachinacabinetdoor001.dds",
-"art/icons/quest_grinddoorkey_bone.dds",
-"art/icons/quest_grinddoorkey_clawed.dds",
-"art/icons/quest_grinddoorkey_embers.dds",
-"art/icons/quest_grinddoorkey_enamel.dds",
-"art/icons/quest_grinddoorkey_ethereal.dds",
-"art/icons/quest_grinddoorkey_legionary.dds",
-"art/icons/quest_grinddoorkey_planar.dds",
-"art/icons/quest_grinddoorkey_shackles.dds",
-"art/tutorial/examples/help-ic_door-1024x512.dds",
-"esoui/art/compass/groupleader_door.dds",
-"esoui/art/compass/groupmember_door.dds",
-"esoui/art/compass/quest_icon_door.dds",
-"esoui/art/compass/quest_icon_door_assisted.dds",
-"esoui/art/compass/repeatablequest_icon_door.dds",
-"esoui/art/compass/repeatablequest_icon_door_assisted.dds",
-"esoui/art/floatingmarkers/quest_icon_door.dds",
-"esoui/art/floatingmarkers/quest_icon_door_assisted.dds",
-"esoui/art/floatingmarkers/repeatablequest_icon_door.dds",
-"esoui/art/floatingmarkers/repeatablequest_icon_door_assisted.dds"
+"CyroDoor/icons/door1.dds",
+"CyroDoor/icons/door2.dds",
+"CyroDoor/icons/door3.dds",
+"CyroDoor/icons/door4.dds",
+"CyroDoor/icons/door5.dds"
+}
+
+local doors = {
+"CyroDoor/icons/postern2.dds",
+"CyroDoor/icons/postern2.dds",
+"CyroDoor/icons/postern2.dds",
+"CyroDoor/icons/postern2.dds",
+"CyroDoor/icons/postern2.dds",
+"CyroDoor/icons/postern2.dds",
+"CyroDoor/icons/postern2.dds",
+"CyroDoor/icons/postern2.dds",
+"CyroDoor/icons/postern2.dds",
+"CyroDoor/icons/postern2.dds"
 }
 
 local function prev_texture(nid, tryprev)
@@ -89,16 +55,35 @@ local function prev_texture(nid, tryprev)
     end
 end
 
-local function next_texture(nid, trynext)
+local layout = {maxDistance = 0.05}
+
+local function next_texture(n, trynext, x, y)
     if not saved.doorix or not doors[saved.doorix] or (trynext and not doors[saved.doorix + 1]) then
 	saved.doorix = 1
     elseif trynext then
 	saved.doorix = saved.doorix + 1
     end
-    lmp:SetLayoutKey(nid, "texture", doors[saved.doorix])
-    lmp:RefreshPins(nid)
-    if trynext then
-	df("%d) %s", saved.doorix, doors[saved.doorix])
+    local texture
+    if n:find("Postern") then
+	texture = posterns[saved.doorix]
+    else
+	texture = doors[saved.doorix]
+    end
+    if x ~= nil then
+	lmp:AddPinType(n, function ()
+df("AddPinType %s called", n)
+	    lmp:CreatePin(n, {}, x, y)
+	end)
+	layout['texture'] = texture
+	cmp:AddCustomPin(n, function(pm)
+df("AddCustomPin %s called", n)
+	    pm:CreatePin(n, nil, x, y)
+	end, layout)
+    end
+    lmp:SetLayoutKey(n, "texture", texture)
+    -- lmp:RefreshPins(nid)
+    if true or trynext then
+	df("%d) %s", saved.doorix, texture)
     end
 end
 
@@ -108,7 +93,7 @@ local function color(nid, r, g, b, a)
     elseif not saved.color or not saved.color[1] then
 	saved.color = {0, 1, 0, 1}
     end
-    df("color %d, %d, %d, %d", unpack(saved.color))
+    -- df("color %d, %d, %d, %d", unpack(saved.color))
     local color = ZO_ColorDef:New(unpack(saved.color))
     lmp:SetLayoutKey(nid, "tint", color)
     lmp:RefreshPins(nid)
@@ -131,15 +116,18 @@ function _init(_, name)
     xxx:SetHidden(false)
 
     for n, c in pairs(saved.coords.Cyrodiil) do
-	local id = lmp:AddPinType(n, function ()
-	    lmp:CreatePin(n, {}, c[1], c[2])
-	end)
+	next_texture(n, false, unpack(c))
 	lmp:SetLayoutKey(id, "level", 200)
-	lmp:SetLayoutKey(id, "size", 14)
+	local size
+	if n:find("Postern") then
+	    size = 4
+	else
+	    size = 10
+	end
+	lmp:SetLayoutKey(n, "size", size)
 	color(n)
-	next_texture(id, false)
 	local x = lmp:IsEnabled(id)
-	df("%s(%d) %f, %f %s", n, id, c[1], c[2], tostring(x))
+	df("%s(%d) %f, %f; enabled = %s; size = %d", n, id, c[1], c[2], tostring(x), tonumber(lmp:GetLayoutKey(n, "size")))
     end
     SLASH_COMMANDS["/cdn"] = function()
 	local trynext = true
@@ -167,7 +155,7 @@ function _init(_, name)
     end
     SLASH_COMMANDS["/cdb"] = function()
 	for n in pairs(saved.coords.Cyrodiil) do
-	    color(n, 0, 0, 0, 1)
+	    color(n, 0.2, 0.6, 1, 1)
 	end
     end
     SLASH_COMMANDS["/cdr"] = function()
