@@ -13,8 +13,8 @@ Name = myname
 local saved
 local texture
 local gatehouses, posterns
-local alliance
-local green = {0, 1, 0, 1}
+local myalliance
+local green = {0, 1, 0, 0.5}
 local gray = {0.75, 0.75, 0.75, 1}
 local green1
 local gray1
@@ -55,7 +55,7 @@ function CyroDoor.SaveCoords(mapname, s, x, y)
 	return -- for now?
     end
     local loc = GetPlayerLocationName()
-    if keepnames[loc] then
+    if not keepnames[loc] then
 	return
     end
     local kid = keepnames[loc]
@@ -100,6 +100,18 @@ local function set_gray(pin)
     pin:GetNamedChild("Background"):SetColor(unpack(gray))
 end
 
+function mykeep(n, c)
+    local res = GetKeepAlliance(c[3], 1) == myalliance
+    -- df("returning %s for %d == %d", tostring(res), GetKeepAlliance(c[3], 1), myalliance)
+    return res
+end
+
+function theirkeep(n, c)
+    local res = GetKeepAlliance(c[3], 1) ~= myalliance
+    -- df("returning %s for %d ~= %d", tostring(res), GetKeepAlliance(c[3], 1), myalliance)
+    return res
+end
+
 function _init(_, name)
     if name ~= myname then
 	return
@@ -128,36 +140,36 @@ function _init(_, name)
 	{
 	    name = "My Keep Postern",
 	    door = posterns,
-	    find = function (n) return true end,
+	    find = mykeep,
 	    layout = {level = 100, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/postern.dds", tint = green1, additionalLayout = {set_green, set_green}},
 	},
 	{
 	    name = "My Keep Gatehouse",
 	    door = gatehouses,
-	    find = function (n) return true end,
+	    find = mykeep,
 	    layout = {level = 100, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/gatehouse.dds", tint = green1, additionalLayout = {set_green, set_green}},
 	},
 	{
 	    name = "Their Keep Postern",
 	    door = posterns,
-	    find = function (n) return true end,
+	    find = theirkeep,
 	    layout = {level = 100, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/postern.dds", tint = gray1, additionalLayout = {set_gray, set_gray}},
 	},
 	{
 	    name = "Their Keep Gatehouse",
 	    door = gatehouses,
-	    find = function (n) return true end,
+	    find = theirkeep,
 	    layout = {level = 100, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/gatehouse.dds", tint = gray1, additionalLayout = {set_gray, set_gray}},
 	}
     }
-    alliance = GetUnitAlliance("player")
+    myalliance = GetUnitAlliance("player")
     lmp.Name = 'LibMapPins'
     cmp.pinManager.Name = 'CustomCompassPins'
     for _, x in ipairs(where) do
 	local name, door, find, layout = x.name, x.door, x.find, x.layout
 	local pid = lmp:AddPinType(name, function() create(lmp, name, find, door) end)
 	lmp:SetLayoutData(pid, layout)
-	color(pid)
+	-- color(pid)
 
 	cmp:AddCustomPin(name, function(pm) create(pm, name, find, door) end, layout)
 	cmp:RefreshPins(name)
@@ -171,38 +183,6 @@ function _init(_, name)
 	end
     end
     saved.keepnames = keepnames
-    saved.keepname = nil
-    saved.coords = nil
-    saved.doorix = nil
-    for n, c in pairs(saved.doors.Cyrodiil.posterns) do
-	if #c == 2 then
-	    while true do
-		local on = n
-		n = n:gsub(' N', ' ')
-		n = n:gsub(' S', ' ')
-		n = n:gsub(' E', ' ')
-		n = n:gsub(' W', ' ')
-		n = n:gsub(' $', '')
-		if n == on then
-		    break
-		end
-	    end
-	    if keepnames[n] == nil then
-		df("Don't grok '%s' from posterns", n)
-	    else
-		c[#c + 1] = keepnames[n]
-	    end
-	end
-    end
-    for n, c in pairs(saved.doors.Cyrodiil.gatehouses) do
-	if #c == 2 then
-	    if keepnames[n] == nil then
-		df("Don't grok '%s' from gatehouses", n)
-	    else
-		c[#c + 1] = keepnames[n]
-	    end
-	end
-    end
 
     SLASH_COMMANDS["/cdl"] = function(x)
 	local i = tonumber(x)
