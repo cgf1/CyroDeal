@@ -1,5 +1,9 @@
 ALL:=Coord.lua.ok CyroDoor.lua.ok
-all install:  ${ALL}
+.PHONY: all
+all:  ${ALL}
+
+.PHONY: install
+install: all
 	@rsync -aR ${ALL:.ok=} icons/*.dds CyroDoor.txt  '/smb/c/Users/cgf/Documents/Elder Scrolls Online/live/AddOns'/Cyrodoor/
 	@touch '/smb/c/Users/cgf/Documents/Elder Scrolls Online/live/AddOns'/POC/POC.txt
 

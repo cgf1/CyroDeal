@@ -13,6 +13,12 @@ Name = myname
 local saved
 local texture
 local gatehouses, posterns
+local alliance
+local green = {0, 1, 0, 1}
+local gray = {0.75, 0.75, 0.75, 1}
+local green1
+local gray1
+local keepnames = {}
 
 local t = "esoui/art/floatingmarkers/repeatablequest_icon_door_assisted.dds"
 local where
@@ -49,6 +55,11 @@ function CyroDoor.SaveCoords(mapname, s, x, y)
 	return -- for now?
     end
     local loc = GetPlayerLocationName()
+    if keepnames[loc] then
+	return
+    end
+    local kid = keepnames[loc]
+
     local doortype, text = mysplit(s)
     local door
     if doortype == 'p' then
@@ -63,7 +74,7 @@ function CyroDoor.SaveCoords(mapname, s, x, y)
 	key = loc
     end
 
-    door[key] = {x, y}
+    door[key] = {x, y, kid}
     lmp:RefreshPins(nil)
     cmp:RefreshPins(nil)
 end
@@ -73,18 +84,30 @@ local function create(what, name, func, doortab)
     local CreatePin = what.CreatePin
     if zone == 'cyrodiil' then
 	for n, c in pairs(doortab) do
-	    if func(n) then
-		CreatePin(what, name, {}, unpack(c))
-		df("%s: created pin %s for '%s' at %f, %f", what.Name, name, n, c[1], c[2])
+	    if func(n, c) then
+		CreatePin(what, name, {}, c[1], c[2])
+		-- df("%s: created pin %s for '%s' at %f, %f", what.Name, name, n, c[1], c[2])
 	    end
 	end
     end
+end
+
+local function set_green(pin)
+    pin:GetNamedChild("Background"):SetColor(unpack(green))
+end
+
+local function set_gray(pin)
+    pin:GetNamedChild("Background"):SetColor(unpack(gray))
 end
 
 function _init(_, name)
     if name ~= myname then
 	return
     end
+
+    green1 = ZO_ColorDef:New(unpack(green))
+    gray1 = ZO_ColorDef:New(unpack(gray))
+
     EVENT_MANAGER:UnregisterForEvent(name, EVENT_ADD_ON_LOADED)
     saved = ZO_SavedVars:NewAccountWide(name .. 'Saved', 1, nil, {coords = {}})
     InitCoord(saved)
@@ -103,20 +126,31 @@ function _init(_, name)
     posterns = cyrodoors.posterns
     where = {
 	{
-	    name = "Cyrodiil Keep Postern",
+	    name = "My Keep Postern",
 	    door = posterns,
 	    find = function (n) return true end,
-	    layout = {level = 100, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/postern.dds"},
+	    layout = {level = 100, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/postern.dds", tint = green1, additionalLayout = {set_green, set_green}},
 	},
 	{
-	    name = "Cyrodiil Keep Gatehouse",
+	    name = "My Keep Gatehouse",
 	    door = gatehouses,
 	    find = function (n) return true end,
-	    layout = {level = 100, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/gatehouse.dds"},
+	    layout = {level = 100, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/gatehouse.dds", tint = green1, additionalLayout = {set_green, set_green}},
+	},
+	{
+	    name = "Their Keep Postern",
+	    door = posterns,
+	    find = function (n) return true end,
+	    layout = {level = 100, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/postern.dds", tint = gray1, additionalLayout = {set_gray, set_gray}},
+	},
+	{
+	    name = "Their Keep Gatehouse",
+	    door = gatehouses,
+	    find = function (n) return true end,
+	    layout = {level = 100, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/gatehouse.dds", tint = gray1, additionalLayout = {set_gray, set_gray}},
 	}
     }
-    df('posterns %s', tostring(posterns))
-    df('gatehouses %s', tostring(gatehouses))
+    alliance = GetUnitAlliance("player")
     lmp.Name = 'LibMapPins'
     cmp.pinManager.Name = 'CustomCompassPins'
     for _, x in ipairs(where) do
@@ -127,7 +161,47 @@ function _init(_, name)
 
 	cmp:AddCustomPin(name, function(pm) create(pm, name, find, door) end, layout)
 	cmp:RefreshPins(name)
-	df("created pins for %s, texture %s, size %d", name, layout.texture, layout.size)
+	-- df("created pins for %s, texture %s, size %d", name, layout.texture, layout.size)
+    end
+
+    for i = 1, GetNumKeeps() do
+	local kid = GetKeepKeysByIndex(i)
+	if GetKeepType(kid) == KEEPTYPE_KEEP then
+	    keepnames[GetKeepName(kid)] = kid
+	end
+    end
+    saved.keepnames = keepnames
+    saved.keepname = nil
+    saved.coords = nil
+    saved.doorix = nil
+    for n, c in pairs(saved.doors.Cyrodiil.posterns) do
+	if #c == 2 then
+	    while true do
+		local on = n
+		n = n:gsub(' N', ' ')
+		n = n:gsub(' S', ' ')
+		n = n:gsub(' E', ' ')
+		n = n:gsub(' W', ' ')
+		n = n:gsub(' $', '')
+		if n == on then
+		    break
+		end
+	    end
+	    if keepnames[n] == nil then
+		df("Don't grok '%s' from posterns", n)
+	    else
+		c[#c + 1] = keepnames[n]
+	    end
+	end
+    end
+    for n, c in pairs(saved.doors.Cyrodiil.gatehouses) do
+	if #c == 2 then
+	    if keepnames[n] == nil then
+		df("Don't grok '%s' from gatehouses", n)
+	    else
+		c[#c + 1] = keepnames[n]
+	    end
+	end
     end
 
     SLASH_COMMANDS["/cdl"] = function(x)
