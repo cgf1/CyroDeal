@@ -7,8 +7,9 @@
 ## SavedVariables: CyroDoorSaved CustomCompassPins
 ## OptionalDependsOn: LibSlashCommander pChat tom
 
+Coord.xml
+Bindings.xml
 CyroDoor.lua
 Coord.lua
-Coord.xml
 icons/postern.dds
 icons/gatehouse.dds

@@ -1,5 +1,8 @@
 local lmp = LibStub("LibMapPins-1.0")
 local cmp = COMPASS_PINS
+local ZO_ColorDef = ZO_ColorDef
+local SLASH_COMMANDS = SLASH_COMMANDS
+local GetPlayerLocationName = GetPlayerLocationName
 local x = {
     __index = _G,
 }
@@ -79,10 +82,17 @@ function CyroDoor.SaveCoords(mapname, s, x, y)
     cmp:RefreshPins(nil)
 end
 
+function CyroDoor.Show(down)
+    CyroDoor.Visible = not CyroDoor.Visible
+    -- df("Setting visible to %s", tostring(CyroDoor.Visible))
+    lmp:RefreshPins(nil)
+    cmp:RefreshPins(nil)
+end
+
 local function create(what, name, func, doortab)
-    local zone = lmp:GetZoneAndSubzone()
+    local zone, subzone = lmp:GetZoneAndSubzone()
     local CreatePin = what.CreatePin
-    if zone == 'cyrodiil' then
+    if CyroDoor.Visible and zone == 'cyrodiil' and subzone == 'ava_whole' then
 	for n, c in pairs(doortab) do
 	    if func(n, c) then
 		CreatePin(what, name, {}, c[1], c[2])
@@ -121,7 +131,7 @@ function _init(_, name)
     gray1 = ZO_ColorDef:New(unpack(gray))
 
     EVENT_MANAGER:UnregisterForEvent(name, EVENT_ADD_ON_LOADED)
-    saved = ZO_SavedVars:NewAccountWide(name .. 'Saved', 1, nil, {coords = {}})
+    saved = ZO_SavedVars:NewAccountWide(name .. 'Saved', 1, nil, {doors = {}, Visible = true})
     InitCoord(saved)
     saved.doors = saved.doors or {}
     if not saved.doors.Cyrodiil then
@@ -217,4 +227,5 @@ function _init(_, name)
 end
 
 EVENT_MANAGER:RegisterForEvent(myname, EVENT_ADD_ON_LOADED, _init)
-
+ZO_CreateStringId("SI_BINDING_NAME_CYRODOOR_HOLDDOWN", "Show/hide doors on keeps while key is depressed")
+ZO_CreateStringId("SI_BINDING_NAME_CYRODOOR_TOGGLE", "Toggle visibilty of doors on keeps")

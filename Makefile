@@ -4,7 +4,7 @@ all:  ${ALL}
 
 .PHONY: install
 install: all
-	@rsync -aR ${ALL:.ok=} icons/*.dds CyroDoor.txt  '/smb/c/Users/cgf/Documents/Elder Scrolls Online/live/AddOns'/Cyrodoor/
+	@rsync -aR ${ALL:.ok=} icons/*.dds *.xml CyroDoor.txt  '/smb/c/Users/cgf/Documents/Elder Scrolls Online/live/AddOns'/Cyrodoor/
 	@touch '/smb/c/Users/cgf/Documents/Elder Scrolls Online/live/AddOns'/POC/POC.txt
 
 %.lua.ok: %.lua
