@@ -3,7 +3,7 @@
 ## Author: |c66ffff|Valandil|r
 ## Description: PVP Helper
 ## AddonVersion 0100
-## DependsOn: LibAddonMenu-2.0 LibMapPins-1.0 LibStub LibGPS
+## DependsOn: LibAddonMenu-2.0 LibMapPins-1.0 LibStub LibGPS LibDebugLogger
 ## SavedVariables: CyroDoorSaved CustomCompassPins
 ## OptionalDependsOn: LibSlashCommander pChat tom
 

@@ -9,11 +9,6 @@
                     CyroDoor.Show(false)
                 </Up>
 	    </Action>
-	    <Action name="CYRODOOR_TOGGLE">
-		<Down>
-		    CyroDoor.Show()
-		</Down>
-	    </Action>
 	</Category>
     </Layer>
 </Bindings>
