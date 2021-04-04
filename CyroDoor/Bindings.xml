@@ -1,0 +1,14 @@
+<Bindings>
+    <Layer name="SI_KEYBINDINGS_LAYER_GENERAL">
+	<Category name="CyroDeal">
+	    <Action name="CYRODOOR_HOLDDOWN">
+		<Down>
+		    CyroDeal.CyroDoor.Show(true)
+		</Down>
+                <Up>
+                    CyroDeal.CyroDoor.Show(false)
+                </Up>
+	    </Action>
+	</Category>
+    </Layer>
+</Bindings>

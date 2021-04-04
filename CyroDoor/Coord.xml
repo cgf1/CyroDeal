@@ -1,0 +1,15 @@
+<GuiXml>
+    <Controls>
+        <Backdrop name="CyroDoor_Coord_Research_Template" tier="HIGH" inherits="ZO_EditBackdrop" virtual="true">
+            <Anchor point="TOPLEFT" relativePoint="TOPLEFT" offsetX="0" offsetY="0"/>
+            <Dimensions x="270"/>
+            <Controls>
+                <EditBox name="$(parent)Box" inherits="ZO_DefaultEditForBackdrop ZO_EditDefaultText">
+                    <OnInitialized>
+                        ZO_EditDefaultText_Initialize(self, GetString(CYRODOOR_COORD_SEARCH_PLACEHOLDER))
+                    </OnInitialized>
+                </EditBox>
+            </Controls>
+        </Backdrop>
+    </Controls>
+</GuiXml>
