@@ -9,3 +9,4 @@
 ## OptionalDependsOn: LibSlashCommander pChat tom
 
 CyroDeal.lua
+Chat.lua

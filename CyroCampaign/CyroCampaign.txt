@@ -4,7 +4,6 @@
 ## Description: CyroDeal module for performing various campaign related tasks
 ## AddonVersion 01000
 ## IsLibrary: false
-## DependsOn: CyroDeal LibAddonMenu-2.0
-## OptionalDependsOn: LibDebugLogger pChat tom
+## DependsOn: CyroDeal
 
 CyroCampaign.lua

@@ -37,7 +37,7 @@ local function group(isgroup)
 end
 
 local function wantid(id)
-    return saved[myname].AcceptAll or id == GetAssignedCampaignId()
+    return saved.AcceptAll or id == GetAssignedCampaignId()
 end
 
 local function pos_changed(_, id, isgroup, pos)
@@ -147,6 +147,7 @@ end
 function cc.Init(init)
     chat, log, lsc, options, saved = init.chat, init.log, init.lsc, init.options, init.saved
     saved[myname] = saved[myname] or {AcceptAll = true}
+    saved = saved[myname]
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_CAMPAIGN_QUEUE_JOINED, joined)
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_CAMPAIGN_QUEUE_LEFT, left)
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_CAMPAIGN_QUEUE_POSITION_CHANGED, pos_changed)

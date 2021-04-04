@@ -4,8 +4,7 @@
 ## Description: CyroDeal module for showing keep doors
 ## AddonVersion 01000
 ## IsLibrary: false
-## DependsOn: CyroDeal CustomCompassPins LibAddonMenu-2.0 LibMapPins-1.0 LibGPS
-## OptionalDependsOn: LibDebugLogger pChat tom
+## DependsOn: CyroDeal CustomCompassPins LibGPS LibMapPins-1.0
 
 Coord.xml
 Bindings.xml

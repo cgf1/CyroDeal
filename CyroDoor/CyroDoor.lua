@@ -148,6 +148,8 @@ end
 function CyroDoor.Init(init)
     tprint(init)
     chat, log, lsc, options, saved = init.chat, init.log, init.lsc, init.options, init.saved
+    saved[myname] = saved[myname] or {}
+    saved = saved[myname]
     if not saved.doors then
 	saved.doors = {
 	    Cyrodiil = {

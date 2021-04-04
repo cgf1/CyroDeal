@@ -1,6 +1,9 @@
+local Chat = Chat
 local EVENT_MANAGER = EVENT_MANAGER
 local GetAddOnManager = GetAddOnManager
+local GetUnitDisplayName = GetUnitDisplayName
 local LibChatMessage = LibChatMessage
+local ReloadUI = ReloadUI
 local zo_callLater = zo_callLater
 local ZO_SavedVars = ZO_SavedVars
 
@@ -16,9 +19,9 @@ local x = {
 CyroDeal = setmetatable(x, x)
 local CyroDeal = CyroDeal
 CyroDeal.CyroDeal = CyroDeal
-setfenv(1,CyroDeal)
+setfenv(1, CyroDeal)
 
-local chat, log, lsc, saved, options = {}
+local chat, itsme, log, lsc, saved, options = {}
 local panel
 
 function split2(inputstr, sep)
@@ -35,6 +38,56 @@ function split2(inputstr, sep)
 	end
     end
     return first, rest:sub(2)
+end
+
+function split(inputstr, sep)
+    if sep == nil then
+	sep = "%s"
+    end
+    local t = {}
+    for str in inputstr:gmatch("([^"..sep.."]+)") do
+	t[#t + 1] = str
+    end
+    return unpack(t)
+end
+
+function parse(text)
+    local t = {}
+    while text:len() > 0 do
+	local pre, b4q, q = text:match("^(%s*[^'\"]-)([^%s'\"]*)(['\"]?)")
+	if q == '' then
+	    pre = pre .. b4q
+	end
+	for str in pre:gmatch("%S+") do
+	    t[#t + 1] = str
+	    -- print(1, "'" .. t[#t] .. "'")
+	end
+	text = text:sub(pre:len() + 1)
+	if text:len() == 0 then
+	    break
+	end
+	if q ~= '' then
+	    local e
+	    local atom = ''
+	    while true do
+		local _, e = text:find("%b" .. q .. q)
+
+		local seg = text:sub(1, e):gsub(q, '')
+		atom = atom .. seg
+		text = text:sub(e + 1)
+		local pre, q = text:match([[^([^'"%s]*)(['"]?)]])
+		atom = atom .. pre
+		text = text:sub(pre:len() + 1)
+
+		if q == '' then
+		    break
+		end
+	    end
+	    t[#t + 1] = atom
+	    text = ' ' .. text
+	end
+    end
+    return unpack(t)
 end
 
 local seen
@@ -75,6 +128,32 @@ function dlater(msg)
     zo_callLater(function () d(msg) end, 100)
 end
 
+local function cyrodeal(what)
+    if what == nil then
+	return '/cyr', cyrodeal, 'Perform various operations for CyroDeal addon'
+    end
+    local kw, rest = split2(what)
+    if kw == 'clear' then
+	if rest == '' then
+	    saved = {}
+	else
+	    saved[rest] = nil
+	end
+	ReloadUI()
+    end
+end
+
+local function rrr(what)
+    if what == nil then
+	return '/rrr', rrr, 'Alias for /reloadui'
+    end
+    ReloadUI()
+end
+
+local function print(...)
+    local args = {...}
+end
+
 local initvars
 local function init(_, name)
     if name == myname then
@@ -106,7 +185,12 @@ local function init(_, name)
 	    registerForRefresh = true
 	}
 	panel = LAM:RegisterAddonPanel(myname .. 'AddonPanel', paneldata)
-	initvars = {chat = chat, log = log, lsc = lsc, options = options, saved = saved}
+	local iam = {['@JamesHowser'] = true, ['@Smilier'] = true, ['@StompMan'] = true}
+	itsme = not not iam[GetUnitDisplayName('player')]
+	initvars = {chat = chat, itsme = itsme, log = log, lsc = lsc, options = options, saved = saved}
+	CyroDeal.Chat(initvars)
+	lsc:Register(cyrodeal())
+	lsc:Register(rrr())
     end
 end
 
