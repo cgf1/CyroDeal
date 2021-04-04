@@ -49,12 +49,12 @@ end
 local function state_changed(_, id, isgroup, state)
     dlater("STATE " .. state)
     if not wantid(id) then
-        return
+	return
     end
     if state == CAMPAIGN_QUEUE_REQUEST_STATE_CONFIRMING and wantid(id) then
 	ConfirmCampaignEntry(id, isgroup, true)
     elseif state == CAMPAIGN_QUEUE_REQUEST_STATE_PENDING_ACCEPT then
-        chat:Printf("[CyroDeal] entering campaign %s", GetCampaignName(id))
+	chat:Printf("[CyroDeal] entering campaign %s", GetCampaignName(id))
     end
 end
 

@@ -1,15 +1,11 @@
-## APIVersion: 100028 100029
-## Title: CyroDoor
+## APIVersion: 100034 100035
+## Title: CyroDeal
 ## Author: |c66ffff|Valandil|r
-## Description: PVP Helper
-## AddonVersion 0100
-## DependsOn: LibAddonMenu-2.0 LibMapPins-1.0 LibStub LibGPS LibDebugLogger
-## SavedVariables: CyroDoorSaved CustomCompassPins
+## Description: Cyrodiil Helper
+## AddonVersion 01000
+## IsLibrary: false
+## DependsOn: LibAddonMenu-2.0 LibDebugLogger LibChatMessage LibSlashCommander
+## SavedVariables: CyroDealSaved
 ## OptionalDependsOn: LibSlashCommander pChat tom
 
-Coord.xml
-Bindings.xml
-CyroDoor.lua
-Coord.lua
-icons/postern.dds
-icons/gatehouse.dds
+CyroDeal.lua

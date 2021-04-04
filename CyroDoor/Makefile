@@ -12,9 +12,9 @@ all:  ${ALL}
 
 .PHONY: install
 install: all
-	rsync -$r ${ALL:.ok=} ${txt}  $g/$n/
-	rsync -$r ${ALL:.ok=} ${txt}  ${gp}/$n/
-	rsync -$r ${ALL:.ok=} ${txt}  $e/$n/
+	@rsync -$r ${ALL:.ok=} ${txt}  $g/$n/
+	@rsync -$r ${ALL:.ok=} ${txt}  ${gp}/$n/
+	@rsync -$r ${ALL:.ok=} ${txt}  $e/$n/
 	@${touch}
 
 %.lua.ok: %.lua
