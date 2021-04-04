@@ -49,8 +49,9 @@ end
 function print(...)
     local args, color, obj = chatobj(...)
     local msg = ''
-    for _, s in ipairs(args) do
-	msg = msg .. ' ' .. tostring(s)
+    local n = select('#', unpack(args))
+    for i = 1, n do
+	msg = msg .. ' ' .. tostring(args[i])
     end
     obj:Print(colorize(color, msg:sub(2)))
 end
