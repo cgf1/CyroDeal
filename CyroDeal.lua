@@ -23,6 +23,7 @@ setfenv(1, CyroDeal)
 
 local chat, itsme, log, lsc, saved, options = {}
 local panel
+local dprint, print, printf
 
 function split2(inputstr, sep)
     if sep == nil then
@@ -128,16 +129,20 @@ function dlater(msg)
     zo_callLater(function () d(msg) end, 100)
 end
 
+local modules = {}
 local function cyrodeal(what)
     if what == nil then
 	return '/cyr', cyrodeal, 'Perform various operations for CyroDeal addon'
     end
     local kw, rest = split2(what)
     if kw == 'clear' then
-	if rest == '' then
-	    saved = {}
-	else
+	if rest ~= '' then
 	    saved[rest] = nil
+	else
+	    for _, m in ipairs(modules) do
+		print("clearing", m)
+		saved[m] = nil
+	    end
 	end
 	ReloadUI()
     end
@@ -150,13 +155,12 @@ local function rrr(what)
     ReloadUI()
 end
 
-local function print(...)
-    local args = {...}
-end
-
 local initvars
 local function init(_, name)
     if name == myname then
+	dprint = CyroDeal.dprint
+	print = CyroDeal.print
+	printf = CyroDeal.printf
 	EVENT_MANAGER:UnregisterForEvent(myname, EVENT_ADD_ON_LOADED)
 	saved = ZO_SavedVars:NewCharacterIdSettings(name .. 'Saved', 1.0, nil, defaults)
 	local lcm = LibChatMessage
@@ -187,11 +191,34 @@ local function init(_, name)
 	panel = LAM:RegisterAddonPanel(myname .. 'AddonPanel', paneldata)
 	local iam = {['@JamesHowser'] = true, ['@Smilier'] = true, ['@StompMan'] = true}
 	itsme = not not iam[GetUnitDisplayName('player')]
-	initvars = {chat = chat, itsme = itsme, log = log, lsc = lsc, options = options, saved = saved}
+	initvars = {chat = chat, itsme = itsme, log = log, lsc = lsc, options = options}
 	CyroDeal.Chat(initvars)
 	lsc:Register(cyrodeal())
 	lsc:Register(rrr())
     end
+end
+
+local function loadsaved(module)
+    saved[module] = saved[module] or {}
+    local modsaved = saved[module]
+    if CyroDeal[module].SaveDefaults then
+	local defaults = CyroDeal[module].SaveDefaults()
+	for k, v in pairs(defaults) do
+	    if modsaved[k] == nil then
+		modsaved[k] = v
+	    end
+	end
+    end
+    local sawit = false
+    for k, v in pairs(saved) do
+	if k == module then
+	    print("YES", module)
+	    sawit = true
+	end
+    end
+    dprint("NEVER SAW", module, saved[module])
+
+    return modsaved
 end
 
 local function activated()
@@ -203,6 +230,8 @@ local function activated()
 	if enabled then
 	    local word = description:gmatch("%S+")()
 	    if word == 'CyroDeal' then
+		modules[#modules + 1] = module
+		initvars.saved = loadsaved(module)
 		CyroDeal[module].Init(initvars)
 	    end
 	end

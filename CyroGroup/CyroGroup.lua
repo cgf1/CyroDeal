@@ -115,10 +115,12 @@ function cg.SendText(n)
     end
 end
 
+function cg.SaveDefaults()
+    return {AutoAccept = {}, Texts = {}, FindDiscord = true}
+end
+
 function cg.Init(init)
     chat, log, lsc, options, saved = init.chat, init.log, init.lsc, init.options, init.saved
-    saved[myname] = saved[myname] or {AutoAccept = {}, Texts = {}, FindDiscord = true}
-    saved = saved[myname]
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_GROUP_INVITE_RECEIVED, on_invite)
     local aa = lsc:Register(autoaccept())
     aa:AddAlias('/cya')

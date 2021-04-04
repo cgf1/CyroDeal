@@ -1,4 +1,3 @@
-local debug = CyroDeal.debug
 local lcm = LibChatMessage
 local TAG_PREFIX_OFF = lcm.TAG_PREFIX_OFF
 local mysplit = CyroDeal.mysplit
@@ -59,11 +58,10 @@ end
 function printf(...)
     local args, color, obj = chatobj(...)
     args[1] = colorize(color, args[1])
-debug(args[1])
     obj:Printf(unpack(args))
 end
 
-function debug(...)
+function dprint(...)
     log:Warn(...)
 end
 
@@ -94,7 +92,7 @@ local function real_watch(what, ...)
 	doit = true
     end
     if doit then
-	debug(what .. ': ', ...)
+	dprint(what .. ': ', ...)
     end
 end
 

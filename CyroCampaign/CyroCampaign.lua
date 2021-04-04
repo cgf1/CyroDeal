@@ -144,10 +144,12 @@ local function cyq(what)
     end
 end
 
+function cc.SaveDefaults()
+    return {AcceptAll = true}
+end
+
 function cc.Init(init)
     chat, log, lsc, options, saved = init.chat, init.log, init.lsc, init.options, init.saved
-    saved[myname] = saved[myname] or {AcceptAll = true}
-    saved = saved[myname]
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_CAMPAIGN_QUEUE_JOINED, joined)
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_CAMPAIGN_QUEUE_LEFT, left)
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_CAMPAIGN_QUEUE_POSITION_CHANGED, pos_changed)

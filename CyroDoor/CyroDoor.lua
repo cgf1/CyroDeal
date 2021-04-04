@@ -145,13 +145,8 @@ function theirkeep(n, c)
     return res
 end
 
-function CyroDoor.Init(init)
-    tprint(init)
-    chat, log, lsc, options, saved = init.chat, init.log, init.lsc, init.options, init.saved
-    saved[myname] = saved[myname] or {}
-    saved = saved[myname]
-    if not saved.doors then
-	saved.doors = {
+function CyroDoor.SaveDefaults()
+    return {doors = {
 	    Cyrodiil = {
 		gatehouses = {
 		    ["Farragut Keep"] = {
@@ -443,8 +438,12 @@ function CyroDoor.Init(init)
 		    }
 		}
 	    }
-	}
-    end
+	}}
+end
+
+function CyroDoor.Init(init)
+    tprint(init)
+    chat, log, lsc, options, saved = init.chat, init.log, init.lsc, init.options, init.saved
 
     green1 = ZO_ColorDef:New(unpack(green))
     gray1 = ZO_ColorDef:New(unpack(gray))
