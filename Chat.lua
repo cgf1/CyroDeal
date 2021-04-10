@@ -23,7 +23,11 @@ end
 local initwatch
 
 local function chatobj(...)
-    local args = {...}
+    local n = select('#', ...)
+    local args = {}
+    for i=1, n do
+	args[i] = select(i, ...)
+    end
     local obj
     local color
     if type(args[1]) == 'string' then
@@ -36,19 +40,18 @@ local function chatobj(...)
     if lcm:GetTagPrefixMode() ~= TAG_PREFIX_OFF then
 	obj = chat:SetTagColor(color)
     else
-	args[1] = '[CyroDeal] ' .. args[1]
+	args[1] = '[CyroDeal] ' .. tostring(args[1])
 	obj = chat
     end
-    return args, color, obj
+    return args, color, obj, n
 end
 
 local function colorize(color, msg)
     return '|c' .. color .. msg .. '|r'
 end
 function print(...)
-    local args, color, obj = chatobj(...)
+    local args, color, obj, n = chatobj(...)
     local msg = ''
-    local n = select('#', unpack(args))
     for i = 1, n do
 	msg = msg .. ' ' .. tostring(args[i])
     end
@@ -68,7 +71,7 @@ end
 function error(...)
     local vars = {...}
     local printfunc
-    if vars[1]:find('%') then
+    if vars[1]:find('%%') then
 	printfunc = printf
     else
 	printfunc = print
