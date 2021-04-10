@@ -21,9 +21,9 @@ local CyroDeal = CyroDeal
 CyroDeal.CyroDeal = CyroDeal
 setfenv(1, CyroDeal)
 
-local chat, itsme, log, lsc, saved, options = {}
 local panel
 local dprint, print, printf
+local saved
 
 function split2(inputstr, sep)
     if sep == nil then
@@ -158,6 +158,7 @@ end
 local initvars
 local function init(_, name)
     if name == myname then
+	local chat, itsme, log, lsc
 	dprint = CyroDeal.dprint
 	print = CyroDeal.print
 	printf = CyroDeal.printf
@@ -168,30 +169,9 @@ local function init(_, name)
 	log = LibDebugLogger.Create('CyroDeal')
 	log:SetEnabled(true)
 	lsc = LibSlashCommander
-	local LAM = LibAddonMenu2
-	local manager = GetAddOnManager()
-	local name, title, author, description
-	for i = 1, manager:GetNumAddOns() do
-	    name, title, author, description = manager:GetAddOnInfo(i)
-	    if name == myname then
-		break
-	    end
-	end
-
-	local paneldata = {
-	    type = "panel",
-	    name = title,
-	    displayName = "|c00B50F" .. title .. "|r",
-	    author = author,
-	    description = description,
-	    version = version,
-	    registerForDefaults = true,
-	    registerForRefresh = true
-	}
-	panel = LAM:RegisterAddonPanel(myname .. 'AddonPanel', paneldata)
 	local iam = {['@JamesHowser'] = true, ['@Smilier'] = true, ['@StompMan'] = true}
 	itsme = not not iam[GetUnitDisplayName('player')]
-	initvars = {chat = chat, itsme = itsme, log = log, lsc = lsc, options = options}
+	initvars = {chat = chat, itsme = itsme, log = log, lsc = lsc}
 	CyroDeal.Chat(initvars)
 	lsc:Register(cyrodeal())
 	lsc:Register(rrr())
@@ -209,14 +189,6 @@ local function loadsaved(module)
 	    end
 	end
     end
-    local sawit = false
-    for k, v in pairs(saved) do
-	if k == module then
-	    print("YES", module)
-	    sawit = true
-	end
-    end
-    dprint("NEVER SAW", module, saved[module])
 
     return modsaved
 end
@@ -225,6 +197,7 @@ local function activated()
     EVENT_MANAGER:UnregisterForEvent(myname, EVENT_PLAYER_ACTIVATED)
     local manager = GetAddOnManager()
     local n = manager:GetNumAddOns()
+    local options = {}
     for i = 1, n do
 	local module, _, _, description, enabled = manager:GetAddOnInfo(i)
 	if enabled then
@@ -232,10 +205,39 @@ local function activated()
 	    if word == 'CyroDeal' then
 		modules[#modules + 1] = module
 		initvars.saved = loadsaved(module)
-		CyroDeal[module].Init(initvars)
+		local o = CyroDeal[module].Init(initvars)
+		if o then
+		    for _, v in ipairs(o) do
+			options[#options + 1] = v
+		    end
+		end
 	    end
 	end
     end
+
+    local manager = GetAddOnManager()
+    local name, title, author, description
+    for i = 1, manager:GetNumAddOns() do
+	name, title, author, description = manager:GetAddOnInfo(i)
+	if name == myname then
+	    break
+	end
+    end
+    local paneldata = {
+	type = "panel",
+	name = title,
+	displayName = "|c00B50F" .. title .. "|r",
+	author = author,
+	description = description,
+	version = version,
+	registerForDefaults = true,
+	registerForRefresh = true
+    }
+    local LAM = LibAddonMenu2
+    panel = LAM:RegisterAddonPanel(myname .. ' Settings', paneldata)
+
+    LAM:RegisterOptionControls(myname, options)
+    initvars.lsc:Register("/cyrodeal", function () LAM:OpenToPanel(panel) end)
 end
 EVENT_MANAGER:RegisterForEvent(myname, EVENT_ADD_ON_LOADED, init)
 EVENT_MANAGER:RegisterForEvent(myname, EVENT_PLAYER_ACTIVATED, activated)
