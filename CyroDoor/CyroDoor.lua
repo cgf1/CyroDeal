@@ -29,7 +29,7 @@ CyroDoor = setmetatable(x, x)
 local CyroDoor = CyroDoor
 CyroDoor.CyroDoor = CyroDoor
 
-local chat, log, lsc, options, saved
+local log, lsc, saved
 
 local saved
 local texture
@@ -443,7 +443,7 @@ end
 
 function CyroDoor.Init(init)
     tprint(init)
-    chat, log, lsc, options, saved = init.chat, init.log, init.lsc, init.options, init.saved
+    log, lsc, saved = init.log, init.lsc, init.saved
 
     green1 = ZO_ColorDef:New(unpack(green))
     gray1 = ZO_ColorDef:New(unpack(gray))
