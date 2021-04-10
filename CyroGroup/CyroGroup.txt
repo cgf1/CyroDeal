@@ -1,5 +1,5 @@
 ## APIVersion: 100034 100035
-## Title: Streamline group interactions
+## Title: CyroDeal Group Tool
 ## Author: |c66ffff|Valandil|r
 ## Description: CyroDeal module for streamlining group interactions
 ## AddonVersion 01000

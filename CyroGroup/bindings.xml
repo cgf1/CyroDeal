@@ -1,14 +1,14 @@
 <Bindings>
     <Layer name="General">
-        <Category name="CyroGroup Group Tool">
-            <Action name="CYROGROUP_SEND_TEXT1">
-                <Down>CyroDeal.CyroDoor.SendText(1)</Down>
+        <Category name="CyroDeal - Cyrodiil Stuff">
+            <Action name="CYRODEAL_SEND_DISCORD">
+                <Down>CyroDeal.CyroGroup.SendText(0)</Down>
             </Action>
-            <Action name="CYROGROUP_SEND_TEXT2">
-                <Down>CyroDeal.CyroDoor.SendText(1)</Down>
+            <Action name="CYRODEAL_SEND_TEXT1">
+                <Down>CyroDeal.CyroGroup.SendText(1)</Down>
             </Action>
-            <Action name="CYROGROUP_SEND_TEXT3">
-                <Down>CyroDeal.CyroDoor.SendText(1)</Down>
+            <Action name="CYRODEAL_SEND_TEXT2">
+                <Down>CyroDeal.CyroGroup.SendText(2)</Down>
             </Action>
         </Category>
     </Layer>
