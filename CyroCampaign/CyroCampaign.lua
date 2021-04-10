@@ -2,6 +2,7 @@ local CAMPAIGN_QUEUE_REQUEST_STATE_CONFIRMING = CAMPAIGN_QUEUE_REQUEST_STATE_CON
 local CAMPAIGN_QUEUE_REQUEST_STATE_WAITING = CAMPAIGN_QUEUE_REQUEST_STATE_WAITING
 local ConfirmCampaignEntry = ConfirmCampaignEntry
 local dlater = CyroDeal.dlater
+local error = CyroDeal.error
 local GetAssignedCampaignId = GetAssignedCampaignId
 local GetCampaignName = GetCampaignName
 local GetCampaignQueuePosition = GetCampaignQueuePosition
@@ -9,6 +10,8 @@ local GetCampaignQueueState = GetCampaignQueueState
 local GetNumSelectionCampaigns = GetNumSelectionCampaigns
 local GetSelectionCampaignId = GetSelectionCampaignId
 local LeaveCampaignQueue = LeaveCampaignQueue
+local print = CyroDeal.print
+local printf = CyroDeal.printf
 local QueueForCampaign = QueueForCampaign
 local split2 = CyroDeal.split2
 local tostring = tostring
@@ -26,7 +29,7 @@ CyroCampaign = setmetatable(x, x)
 local cc = CyroCampaign
 cc.cc = cc
 
-local chat, log, lsc, options, saved
+local log, lsc, saved
 
 local function group(isgroup)
     if isgroup then
@@ -41,30 +44,29 @@ local function wantid(id)
 end
 
 local function pos_changed(_, id, isgroup, pos)
-    if saved[myname].ShowPosChange then
-	chat:Printf("[CyroDeal] %s%s queue position %d", group(isgroup), GetCampaignName(id), pos)
+    if saved.ShowPosChange then
+	printf("%s%s queue position %d", group(isgroup), GetCampaignName(id), pos)
     end
 end
 
 local function state_changed(_, id, isgroup, state)
-    dlater("STATE " .. state)
     if not wantid(id) then
 	return
     end
     if state == CAMPAIGN_QUEUE_REQUEST_STATE_CONFIRMING and wantid(id) then
 	ConfirmCampaignEntry(id, isgroup, true)
     elseif state == CAMPAIGN_QUEUE_REQUEST_STATE_PENDING_ACCEPT then
-	chat:Printf("[CyroDeal] entering campaign %s", GetCampaignName(id))
+	printf("entering campaign %s", GetCampaignName(id))
     end
 end
 
 local function joined(_, id, isgroup)
-    chat:Printf("[CyroDeal] %squeued for campaign %s", group(isgroup), GetCampaignName(id))
+    printf("%squeued for campaign %s", group(isgroup), GetCampaignName(id))
     -- zo_callLater(function () state_changed(_, id, isgroup, CAMPAIGN_QUEUE_REQUEST_STATE_CONFIRMING) end, 3000)
 end
 
 local function left(_, id, isgroup)
-    chat:Printf("[CyroDeal] left %squeue for %s", group(isgroup), GetCampaignName(id))
+    printf("left %squeue for %s", group(isgroup), GetCampaignName(id))
 end
 
 local function cypvp(what)
@@ -92,7 +94,7 @@ local function cypvp(what)
     if what == '' then
 	wantid = GetAssignedCampaignId()
 	if not wantid then
-	    chat:SetTagColor("ff0000"):Print("[CyroDeal] no home campaign set yet")
+	    error("no home campaign set yet")
 	    return
 	end
     else
@@ -106,16 +108,16 @@ local function cypvp(what)
 	    end
 	end
 	if not wantid then
-	    chat:SetTagColor("ff0000"):Printf("[CyroDeal] campaign '%s' not found", what)
+	    error("campaign '%s' not found", what)
 	    return
 	end
     end
     if leave then
 	LeaveCampaignQueue(wantid, isgroup)
-	chat:Printf("[CyroDeal] %sleaving campaign: %s", group(isgroup), GetCampaignName(wantid))
+	printf("%sleaving campaign: %s", group(isgroup), GetCampaignName(wantid))
     else
 	QueueForCampaign(wantid, isgroup)
-	chat:Printf("[CyroDeal] %squeuing for campaign %s", group(isgroup), GetCampaignName(wantid))
+	printf("%squeuing for campaign %s", group(isgroup), GetCampaignName(wantid))
     end
 end
 
@@ -137,7 +139,7 @@ local function cyq(what)
 		    pos = 'confirming'
 		end
 		if pos then
-		    chat:Printf("[CyroDeal] %s%s queue position: %s", group(isgroup), GetCampaignName(id), tostring(pos))
+		    printf("%s%s queue position: %s", group(isgroup), GetCampaignName(id), tostring(pos))
 		end
 	    end
 	end
@@ -149,7 +151,7 @@ function cc.SaveDefaults()
 end
 
 function cc.Init(init)
-    chat, log, lsc, options, saved = init.chat, init.log, init.lsc, init.options, init.saved
+    log, lsc, saved = init.log, init.lsc, init.saved
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_CAMPAIGN_QUEUE_JOINED, joined)
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_CAMPAIGN_QUEUE_LEFT, left)
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_CAMPAIGN_QUEUE_POSITION_CHANGED, pos_changed)
