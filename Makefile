@@ -4,9 +4,11 @@ e:='/home/cgf/.local/share/Steam/steamapps/compatdata/306130/pfx/drive_c/users/s
 n:=$(notdir ${CURDIR})
 txt:=$($n.txt)
 ALL:=$(shell { echo $n.txt; egrep -v '^[        ]*(;|\#|$$)' $n.txt; ls textures/* 2>/dev/null;} | sed -e 's/\.lua$$/\.lua.ok/' | sort)
-
 MODULES:=$(patsubst %/,%,$(shell echo Cyro*/))
 r:=rRlD
+
+touch:=touch $e/POC/POC.txt $g/POC/POC.txt
+
 .PHONY: all
 all:  ${ALL}
 
@@ -15,11 +17,11 @@ install: all ${MODULES}
 	@rsync -$r ${ALL:.ok=} ${txt} $g/$n/
 	@rsync -$r ${ALL:.ok=} ${txt} ${gp}/$n/
 	@rsync -$r ${ALL:.ok=} ${txt} $e/$n/
-	@touch $e/POC/POC.txt $g/POC/POC.txt
+	@${touch}
 
 .PHONY: ${MODULES}
 ${MODULES}:
-	@make -s -C $@ install touch=
+	@make --no-print-directory -C $@ install touch=
 
 .PHONY: 
 
