@@ -6,9 +6,9 @@
 ## IsLibrary: false
 ## DependsOn: CyroDeal CustomCompassPins LibGPS LibMapPins-1.0
 
-Coord.xml
 Bindings.xml
 CyroDoor.lua
-Coord.lua
-icons/postern.dds
-icons/gatehouse.dds
+icons/our-gatehouse.dds
+icons/our-postern.dds
+icons/their-gatehouse.dds
+icons/their-postern.dds

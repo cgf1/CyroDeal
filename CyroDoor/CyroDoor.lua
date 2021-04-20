@@ -10,6 +10,7 @@ local GetTimeStamp = GetTimeStamp
 local GetUnitAlliance = GetUnitAlliance
 local KEEPTYPE_KEEP = KEEPTYPE_KEEP
 local lmp = LibMapPins
+local print = CyroDeal.print
 local SLASH_COMMANDS = SLASH_COMMANDS
 local split2 = split2
 local tprint = CyroDeal.tprint
@@ -22,7 +23,6 @@ setfenv(1, CyroDeal)
 local x = {
     __index = _G,
     name = myname,
-    Visible = false
 }
 
 CyroDoor = setmetatable(x, x)
@@ -30,15 +30,12 @@ local CyroDoor = CyroDoor
 CyroDoor.CyroDoor = CyroDoor
 
 local log, lsc, saved
+local visible
 
 local saved
 local texture
 local gatehouses, posterns
 local myalliance
-local green = {0, 1, 0, 0.5}
-local gray = {0.75, 0.75, 0.75, 1}
-local green1
-local gray1
 local keepnames = {}
 
 local t = "esoui/art/floatingmarkers/repeatablequest_icon_door_assisted.dds"
@@ -100,14 +97,14 @@ function CyroDoor.Show(down)
     local now = GetTimeStamp()
     if down then
 	lastdown = now
-	CyroDoor.Visible = not CyroDoor.Visible
+	visible = not visible
     else
 	if (now - lastdown) < 5 then
-	    CyroDoor.Visible = false
+	    visible = false
 	end
 	lastdown = nil
     end
-    -- df("Setting visible to %s", tostring(CyroDoor.Visible))
+    -- df("Setting visible to %s", tostring(visible))
     lmp:RefreshPins(nil)
     cmp:RefreshPins(nil)
 end
@@ -115,7 +112,7 @@ end
 local function create(what, name, func, doortab)
     local zone, subzone = lmp:GetZoneAndSubzone()
     local CreatePin = what.CreatePin
-    if CyroDoor.Visible and zone == 'cyrodiil' and subzone == 'ava_whole' then
+    if visible and zone == 'cyrodiil' and subzone == 'ava_whole' then
 	for n, c in pairs(doortab) do
 	    if func(n, c) then
 		CreatePin(what, name, {}, c[1], c[2])
@@ -123,14 +120,6 @@ local function create(what, name, func, doortab)
 	    end
 	end
     end
-end
-
-local function set_green(pin)
-    pin:GetNamedChild("Background"):SetColor(unpack(green))
-end
-
-local function set_gray(pin)
-    pin:GetNamedChild("Background"):SetColor(unpack(gray))
 end
 
 function mykeep(n, c)
@@ -445,10 +434,7 @@ function CyroDoor.Init(init)
     tprint(init)
     log, lsc, saved = init.log, init.lsc, init.saved
 
-    green1 = ZO_ColorDef:New(unpack(green))
-    gray1 = ZO_ColorDef:New(unpack(gray))
-
-    CyroDoor.InitCoord(saved)
+    -- CyroDoor.InitCoord(saved)
     local doors = saved.doors
     gatehouses = doors.Cyrodiil.gatehouses
     posterns = doors.Cyrodiil.posterns
@@ -457,25 +443,25 @@ function CyroDoor.Init(init)
 	    name = "My Keep Postern",
 	    door = posterns,
 	    find = mykeep,
-	    layout = {level = 100, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/postern.dds", tint = green1, additionalLayout = {set_green, set_green}},
+	    layout = {level = 100, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/our-postern.dds"},
 	},
 	{
 	    name = "My Keep Gatehouse",
 	    door = gatehouses,
 	    find = mykeep,
-	    layout = {level = 100, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/gatehouse.dds", tint = green1, additionalLayout = {set_green, set_green}},
+	    layout = {level = 100, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/our-gatehouse.dds"},
 	},
 	{
 	    name = "Their Keep Postern",
 	    door = posterns,
 	    find = theirkeep,
-	    layout = {level = 100, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/postern.dds", tint = gray1, additionalLayout = {set_gray, set_gray}},
+	    layout = {level = 100, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/their-postern.dds"},
 	},
 	{
 	    name = "Their Keep Gatehouse",
 	    door = gatehouses,
 	    find = theirkeep,
-	    layout = {level = 100, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/gatehouse.dds", tint = gray1, additionalLayout = {set_gray, set_gray}},
+	    layout = {level = 100, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/their-gatehouse.dds"},
 	}
     }
     myalliance = GetUnitAlliance("player")
@@ -499,6 +485,10 @@ function CyroDoor.Init(init)
 	end
     end
     saved.keepnames = keepnames
+    EVENT_MANAGER:RegisterForEvent(myname, EVENT_KEEP_ALLIANCE_OWNER_CHANGED, function ()
+	lmp:RefreshPins(nil)
+	cmp:RefreshPins(nil)
+    end)
 
     SLASH_COMMANDS["/cdl"] = function(x)
 	local i = tonumber(x)
