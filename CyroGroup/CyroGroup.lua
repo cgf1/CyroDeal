@@ -219,7 +219,6 @@ local function lam()
 	    }
 	}
     }}
-    print("AAAAA", #a)
     return a
 end
 
