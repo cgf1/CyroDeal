@@ -156,28 +156,6 @@ local function rrr(what)
 end
 
 local initvars
-local function init(_, name)
-    if name == myname then
-	local chat, itsme, log, lsc
-	dprint = CyroDeal.dprint
-	print = CyroDeal.print
-	printf = CyroDeal.printf
-	EVENT_MANAGER:UnregisterForEvent(myname, EVENT_ADD_ON_LOADED)
-	saved = ZO_SavedVars:NewCharacterIdSettings(name .. 'Saved', 1.0, nil, defaults)
-	local lcm = LibChatMessage
-	chat = lcm.Create("CyroDeal", "CYD")
-	log = LibDebugLogger.Create('CyroDeal')
-	log:SetEnabled(true)
-	lsc = LibSlashCommander
-	local iam = {['@JamesHowser'] = true, ['@Smilier'] = true, ['@StompMan'] = true}
-	itsme = not not iam[GetUnitDisplayName('player')]
-	initvars = {chat = chat, itsme = itsme, log = log, lsc = lsc}
-	CyroDeal.Chat(initvars)
-	lsc:Register(cyrodeal())
-	lsc:Register(rrr())
-    end
-end
-
 local function loadsaved(module)
     saved[module] = saved[module] or {}
     local modsaved = saved[module]
@@ -199,17 +177,15 @@ local function activated()
     local n = manager:GetNumAddOns()
     local options = {}
     for i = 1, n do
-	local module, _, _, description, enabled = manager:GetAddOnInfo(i)
-	if enabled then
-	    local word = description:gmatch("%S+")()
-	    if word == 'CyroDeal' then
-		modules[#modules + 1] = module
-		initvars.saved = loadsaved(module)
-		local o = CyroDeal[module].Init(initvars)
-		if o then
-		    for _, v in ipairs(o) do
-			options[#options + 1] = v
-		    end
+	local module, _, _, description = manager:GetAddOnInfo(i)
+	local word = description:gmatch("%S+")()
+	if word == 'CyroDeal' and CyroDeal[module] then
+	    modules[#modules + 1] = module
+	    initvars.saved = loadsaved(module)
+	    local o = CyroDeal[module].Init(initvars)
+	    if o then
+		for _, v in ipairs(o) do
+		    options[#options + 1] = v
 		end
 	    end
 	end
@@ -239,5 +215,27 @@ local function activated()
     LAM:RegisterOptionControls(myname, options)
     initvars.lsc:Register("/cyrodeal", function () LAM:OpenToPanel(panel) end)
 end
+
+local function init(_, name)
+    if name == myname then
+	EVENT_MANAGER:UnregisterForEvent(myname, EVENT_ADD_ON_LOADED)
+	local chat, itsme, log, lsc
+	dprint = CyroDeal.dprint
+	print = CyroDeal.print
+	printf = CyroDeal.printf
+	saved = ZO_SavedVars:NewCharacterIdSettings(name .. 'Saved', 1.0, nil, defaults)
+	local lcm = LibChatMessage
+	chat = lcm.Create("CyroDeal", "CYD")
+	log = LibDebugLogger.Create('CyroDeal')
+	log:SetEnabled(true)
+	lsc = LibSlashCommander
+	local iam = {['@JamesHowser'] = true, ['@Smilier'] = true, ['@StompMan'] = true}
+	itsme = not not iam[GetUnitDisplayName('player')]
+	initvars = {chat = chat, itsme = itsme, log = log, lsc = lsc}
+	CyroDeal.Chat(initvars)
+	lsc:Register(cyrodeal())
+	lsc:Register(rrr())
+	EVENT_MANAGER:RegisterForEvent(myname, EVENT_PLAYER_ACTIVATED, activated)
+    end
+end
 EVENT_MANAGER:RegisterForEvent(myname, EVENT_ADD_ON_LOADED, init)
-EVENT_MANAGER:RegisterForEvent(myname, EVENT_PLAYER_ACTIVATED, activated)
