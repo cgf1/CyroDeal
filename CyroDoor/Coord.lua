@@ -267,7 +267,4 @@ function CyroDoor.InitCoord(_saved)
     CALLBACK_MANAGER:RegisterCallback("OnWorldMapChanged", function() COORD:UpdatePlayerPosition() end)
 
     EVENT_MANAGER:RegisterForEvent(Name, EVENT_GAMEPAD_PREFERRED_MODE_CHANGED, function() COORD:OnGamepadPreferredModeChanged() end)
-
-    --unregister event after initialization
-    EVENT_MANAGER:UnregisterForEvent(Name, EVENT_ADD_ON_LOADED)
 end
