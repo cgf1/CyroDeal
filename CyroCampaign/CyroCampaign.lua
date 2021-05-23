@@ -128,7 +128,7 @@ local function cyq(what)
     local n = GetNumSelectionCampaigns()
     for i = 1, n do
 	local id = GetSelectionCampaignId(i)
-	if id and id ~= 0 and GetCampaignName(id):lower() == what then
+	if id and id ~= 0 and (what == '' or GetCampaignName(id):lower() == what) then
 	    for i=1, 2 do
 		local pos
 		local isgroup = i == 2

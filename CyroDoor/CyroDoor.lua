@@ -1,5 +1,4 @@
 local cmp = COMPASS_PINS
-local COMPASS_PINS = COMPASS_PINS
 local GetKeepAlliance = GetKeepAlliance
 local GetKeepKeysByIndex = GetKeepKeysByIndex
 local GetKeepName = GetKeepName
@@ -11,6 +10,7 @@ local GetUnitAlliance = GetUnitAlliance
 local KEEPTYPE_KEEP = KEEPTYPE_KEEP
 local lmp = LibMapPins
 local print = CyroDeal.print
+local printf = CyroDeal.printf
 local SLASH_COMMANDS = SLASH_COMMANDS
 local split2 = split2
 local tprint = CyroDeal.tprint
@@ -92,33 +92,62 @@ function CyroDoor.SaveCoords(mapname, s, x, y)
     cmp:RefreshPins(nil)
 end
 
+local function create(pm, pintype, func, doortab)
+    local zone, subzone = lmp:GetZoneAndSubzone()
+    if visible and zone == 'cyrodiil' and subzone == 'ava_whole' then
+	local CreatePin = pm.CreatePin
+	for n, c in pairs(doortab) do
+	    if func(n, c) then
+		CreatePin(pm, pintype, {}, c[1], c[2])
+		-- printf("%s: created pin %s for '%s' at %f, %f", pm.Name, pintype, n, c[1], c[2])
+	    end
+	end
+    end
+end
+
+function refreshpins()
+    for pintype, x in pairs(where) do
+	lmp:Enable(pintype)
+	cmp:AddCustomPin(pintype, x.cmpfunc, x.layout)
+	cmp:RefreshPins(pintype)
+    end
+end
+
+function makepins()
+    for pintype, x in pairs(where) do
+	local door, find, layout = x.door, x.find, x.layout
+	lmp:AddPinType(pintype, function() create(lmp, pintype, find, door) end, nil, layout)
+	x.cmpfunc = function(pm) create(pm, pintype, find, door) end
+	cmp:AddCustomPin(pintype, x.cmpfunc, layout)
+	cmp:RefreshPins(pintype)
+    end
+    makepins = refreshpins
+end
+
+function removepins()
+    for pintype in pairs(where) do
+	lmp:Disable(pintype)
+	cmp.pinManager:RemovePins(pintype)
+    end
+end
+
 local lastdown
 function CyroDoor.Show(down)
     local now = GetTimeStamp()
+    local wasvisible = visible
     if down then
 	lastdown = now
-	visible = not visible
+	visible = true
     else
 	if (now - lastdown) < 5 then
 	    visible = false
 	end
 	lastdown = nil
     end
-    -- df("Setting visible to %s", tostring(visible))
-    lmp:RefreshPins(nil)
-    cmp:RefreshPins(nil)
-end
-
-local function create(what, name, func, doortab)
-    local zone, subzone = lmp:GetZoneAndSubzone()
-    local CreatePin = what.CreatePin
-    if visible and zone == 'cyrodiil' and subzone == 'ava_whole' then
-	for n, c in pairs(doortab) do
-	    if func(n, c) then
-		CreatePin(what, name, {}, c[1], c[2])
-		-- df("%s: created pin %s for '%s' at %f, %f", what.Name, name, n, c[1], c[2])
-	    end
-	end
+    if visible then
+	makepins()
+    else
+	removepins()
     end
 end
 
@@ -438,45 +467,31 @@ function CyroDoor.Init(init)
     local doors = saved.doors
     gatehouses = doors.Cyrodiil.gatehouses
     posterns = doors.Cyrodiil.posterns
+    myalliance = GetUnitAlliance("player")
+    -- lmp.Name = 'LibMapPins'
+    -- cmp.pinManager.Name = 'CustomCompassPins'
     where = {
-	{
-	    name = "My Keep Postern",
+	["My Keep Postern"] = {
 	    door = posterns,
 	    find = mykeep,
 	    layout = {level = 100, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/our-postern.dds"},
 	},
-	{
-	    name = "My Keep Gatehouse",
+	["My Keep Gatehouse"] = {
 	    door = gatehouses,
 	    find = mykeep,
 	    layout = {level = 100, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/our-gatehouse.dds"},
 	},
-	{
-	    name = "Their Keep Postern",
+	["Their Keep Postern"] = {
 	    door = posterns,
 	    find = theirkeep,
 	    layout = {level = 100, maxDistance = 0.012, size = 4, texture = "CyroDoor/icons/their-postern.dds"},
 	},
-	{
-	    name = "Their Keep Gatehouse",
+	["Their Keep Gatehouse"] = {
 	    door = gatehouses,
 	    find = theirkeep,
 	    layout = {level = 100, maxDistance = 0.012, size = 8, texture = "CyroDoor/icons/their-gatehouse.dds"},
 	}
     }
-    myalliance = GetUnitAlliance("player")
-    lmp.Name = 'LibMapPins'
-    cmp.pinManager.Name = 'CustomCompassPins'
-    for _, x in ipairs(where) do
-	local name, door, find, layout = x.name, x.door, x.find, x.layout
-	local pid = lmp:AddPinType(name, function() create(lmp, name, find, door) end)
-	lmp:SetLayoutData(pid, layout)
-	-- color(pid)
-
-	cmp:AddCustomPin(name, function(pm) create(pm, name, find, door) end, layout)
-	cmp:RefreshPins(name)
-	-- df("created pins for %s, texture %s, size %d", name, layout.texture, layout.size)
-    end
 
     for i = 1, GetNumKeeps() do
 	local kid = GetKeepKeysByIndex(i)
@@ -487,37 +502,37 @@ function CyroDoor.Init(init)
     saved.keepnames = keepnames
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_KEEP_ALLIANCE_OWNER_CHANGED, function ()
 	lmp:RefreshPins(nil)
-	cmp:RefreshPins(nil)
+	cmp:Update(nil)
     end)
 
     SLASH_COMMANDS["/cdl"] = function(x)
 	local i = tonumber(x)
 	if i then
-	    for _, x in ipairs(where) do
-		lmp:SetLayoutKey(x.name, "level", i)
+	    for pintype in pairs(where) do
+		lmp:SetLayoutKey(pintype, "level", i)
 	    end
 	    lmp:RefreshPins(nil)
 	end
     end
 
     SLASH_COMMANDS["/cdw"] = function()
-	for _, x in ipairs(where) do
-	    color(x.name, 1, 1, 1, 1)
+	for pintype in pairs(where) do
+	    color(pintype, 1, 1, 1, 1)
 	end
     end
     SLASH_COMMANDS["/cdg"] = function()
 	for n in pairs(saved.coords.Cyrodiil) do
-	    color(x.name, 0, 1, 0, 1)
+	    color(x.pintype, 0, 1, 0, 1)
 	end
     end
     SLASH_COMMANDS["/cdb"] = function()
-	for _, x in ipairs(where) do
-	    color(x.name, 0.2, 0.6, 1, 1)
+	for pintype in pairs(where) do
+	    color(pintype, 0.2, 0.6, 1, 1)
 	end
     end
     SLASH_COMMANDS["/cdr"] = function()
-	for _, x in ipairs(where) do
-	    color(x.name, 1, 0, 0, 1)
+	for pintype in pairs(where) do
+	    color(pintype, 1, 0, 0, 1)
 	end
     end
 end
