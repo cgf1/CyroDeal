@@ -501,8 +501,10 @@ function CyroDoor.Init(init)
     end
     saved.keepnames = keepnames
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_KEEP_ALLIANCE_OWNER_CHANGED, function ()
-	lmp:RefreshPins(nil)
-	cmp:Update(nil)
+	if visible then
+print("REFRESHING PINS")
+	    makepins()
+	end
     end)
 
     SLASH_COMMANDS["/cdl"] = function(x)

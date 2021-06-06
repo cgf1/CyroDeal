@@ -231,7 +231,7 @@ local function init(_, name)
 	lsc = LibSlashCommander
 	local iam = {['@JamesHowser'] = true, ['@Smilier'] = true, ['@StompMan'] = true}
 	itsme = not not iam[GetUnitDisplayName('player')]
-	initvars = {chat = chat, itsme = itsme, log = log, lsc = lsc}
+	initvars = {chat = chat, itsme = itsme, log = log, lsc = lsc, saved = saved}
 	CyroDeal.Chat(initvars)
 	lsc:Register(cyrodeal())
 	lsc:Register(rrr())

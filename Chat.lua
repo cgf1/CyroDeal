@@ -9,7 +9,7 @@ setfenv(1, CyroDeal)
 -- Globals defined here
 
 Watching = false
-watch = nil
+Watch = nil
 
 _ = ''	-- start parsing
 
@@ -108,7 +108,7 @@ local function setwatch(x)
 	saved.WatchMen = {}
 	watchmen = saved.WatchMen
 	print("cleared all watchpoints")
-	watch = emptyfunc
+	Watch = emptyfunc
 	Watching = false
 	return
     end
@@ -134,10 +134,10 @@ local function setwatch(x)
     end
     watchmen[what] = todo
     if next(watchmen) then
-	watch = real_watch
+	Watch = real_watch
 	Watching = true
     else
-	watch = emptyfunc
+	Watch = emptyfunc
 	Watching = false
     end
     print("watch", what, '=', todo)
@@ -152,15 +152,15 @@ initwatch = function()
     end
     initwatch = emptyfunc
     if next(watchmen) then
-	watch = real_watch
+	Watch = real_watch
 	Watching = true
     else
-	watch = emptyfunc
+	Watch = emptyfunc
 	Watching = false
     end
 end
 
-watch = real_watch
+Watch = real_watch
 
 function Chat(init)
     chat, itsme, log, lsc, saved = init.chat, init.itsme, init.log, init.lsc, init.saved
