@@ -6,6 +6,8 @@ txt:=$($n.txt)
 ALL:=$(shell { echo $n.txt; egrep -v '^[        ]*(;|\#|$$)' $n.txt; ls textures/* 2>/dev/null;} | sed -e 's/\.lua$$/\.lua.ok/' | sort)
 touch:=touch $e/POC/POC.txt $g/POC/POC.txt
 
+export LUAIGNORE=CyroGroup_ThreeButtonDialog ZO_Dialogs_ShowDialog ZO_PreHook ZO_PlayerToPlayer
+
 r:=rRlD
 .PHONY: all
 all:  ${ALL}

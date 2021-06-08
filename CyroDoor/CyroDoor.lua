@@ -132,6 +132,7 @@ function removepins()
 end
 
 local lastdown
+local monitoring = false
 function CyroDoor.Show(down)
     local now = GetTimeStamp()
     local wasvisible = visible
@@ -141,12 +142,24 @@ function CyroDoor.Show(down)
     else
 	if (now - lastdown) < 5 then
 	    visible = false
+	else
+	    EVENT_MANAGER:RegisterForEvent(myname, EVENT_KEEP_ALLIANCE_OWNER_CHANGED, function ()
+		if visible then
+		    print("REFRESHING PINS")
+		    makepins()
+		end
+	    end)
+	    monitoring = true
 	end
 	lastdown = nil
     end
     if visible then
 	makepins()
     else
+	if monitoring then
+	    EVENT_MANAGER:UnregisterForEvent(myname, EVENT_KEEP_ALLIANCE_OWNER_CHANGED)
+	    monitoring = false
+	end
 	removepins()
     end
 end
@@ -500,12 +513,6 @@ function CyroDoor.Init(init)
 	end
     end
     saved.keepnames = keepnames
-    EVENT_MANAGER:RegisterForEvent(myname, EVENT_KEEP_ALLIANCE_OWNER_CHANGED, function ()
-	if visible then
-print("REFRESHING PINS")
-	    makepins()
-	end
-    end)
 
     SLASH_COMMANDS["/cdl"] = function(x)
 	local i = tonumber(x)

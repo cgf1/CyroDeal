@@ -1,7 +1,7 @@
 <GuiXml>
     <Controls>
         <TopLevelControl name="CyroGroup_ThreeButtonDialog" tier="MEDIUM" level="1" mouseEnabled="true" hidden="true" allowBringToTop="false" resizeToFitDescendents="true" >
-            <Anchor point="CENTER" relativeTo="GuiRoot" />
+            <Anchor point="CENTER" relativeTo="GuiRoot" offsetY="400" />
             <Dimensions x="1600" y="800" />
             <OnEffectivelyShown>
                 if not self.animation then
@@ -17,20 +17,20 @@
                 CyroDeal.CyroGroup.ThreeButtonDialog_OnInitialized(self)
             </OnInitialized>
             <Controls>
-                <Label name="$(parent)Text" inherits="ZO_SmallKeyMarkupLabel ZO_DialogContentAnchors" font="ZoFontGameLarge" color="INTERFACE_COLOR_TYPE_TEXT_COLORS:INTERFACE_TEXT_COLOR_NORMAL">
-                    <Anchor point="CENTER" relativeTo="$(parent)" relativePoint="CENTER" />
+                <Label name="$(parent)Text" inherits="ZO_SmallKeyMarkupLabel ZO_DialogContentAnchors" font="ZoFontHeader4" color="INTERFACE_COLOR_TYPE_TEXT_COLORS:INTERFACE_TEXT_COLOR_NORMAL">
+                    <Anchor point="TOPLEFT" relativeTo="$(parent)" />
                 </Label>
-                <Control name="$(parent)ButtonGroup" hidden="false" >
-                    <Anchor point="BOTTOM" relativePoint="CENTER" />
+                <Control name="$(parent)ButtonGroup" hidden="false" resizeToFitDescendents="true" >
+                    <Anchor point="CENTER" relativeTo="$(parent)Text" />
                     <Controls>
                         <Control name="$(parent)Button1" inherits="ZO_DialogButton">
-                            <Anchor point="BOTTOMLEFT" relativeTo="$(parent)ButtonGroup" relativePoint="BOTTOMLEFT" />
+                            <Anchor point="BOTTOMLEFT" relativeTo="$(parent)ButtonGroup" relativePoint="BOTTOMLEFT" offsetY="40" />
                         </Control>
                         <Control name="$(parent)Button2" inherits="ZO_DialogButton">
-                            <Anchor point="TOPLEFT" relativeTo="$(parent)Button1" relativePoint="TOPRIGHT" />
+                            <Anchor point="TOPLEFT" relativeTo="$(parent)Button1" relativePoint="TOPRIGHT" offsetX="20" />
                         </Control>
                         <Control name="$(parent)Button3" inherits="ZO_DialogButton">
-                            <Anchor point="TOPLEFT" relativeTo="$(parent)Button2" relativePoint="TOPRIGHT" />
+                            <Anchor point="TOPLEFT" relativeTo="$(parent)Button2" relativePoint="TOPRIGHT" offsetX="20" />
                         </Control>
                     </Controls>
                 </Control>

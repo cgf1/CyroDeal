@@ -8,8 +8,8 @@ setfenv(1, CyroDeal)
 
 -- Globals defined here
 
-Watching = false
 Watch = nil
+Watching = false
 
 _ = ''	-- start parsing
 
@@ -65,7 +65,11 @@ function printf(...)
 end
 
 function dprint(...)
-    log:Warn(...)
+    if not log then
+	d(...)
+    else
+	log:Warn(...)
+    end
 end
 
 function error(...)

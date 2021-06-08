@@ -1,9 +1,12 @@
 local AcceptGroupInvite = AcceptGroupInvite
 local CHAT_CHANNEL_PARTY = CHAT_CHANNEL_PARTY
 local CHAT_SYSTEM = CHAT_SYSTEM
+local DeclineGroupInvite = DeclineGroupInvite
 local EQUIP_SLOT_COSTUME = EQUIP_SLOT_COSTUME
 local dlater = CyroDeal.dlater
+local dprint = CyroDeal.dprint
 local error = CyroDeal.error
+local GetControl = GetControl
 local GetGuildDescription = GetGuildDescription
 local GetGuildId = GetGuildId
 local GetGuildMotD = GetGuildMotD
@@ -11,12 +14,24 @@ local GetGuildName = GetGuildName
 local GetItemCreatorName = GetItemCreatorName
 local GetNumGuilds = GetNumGuilds
 local GroupLeave = GroupLeave
+local INTERACT_TYPE_GROUP_INVITE = INTERACT_TYPE_GROUP_INVITE
+local INTERACT_TYPE_TRAVEL_TO_LEADER = INTERACT_TYPE_TRAVEL_TO_LEADER
+local PLAYER_TO_PLAYER = PLAYER_TO_PLAYER
 local print = CyroDeal.print
 local printf = CyroDeal.printf
+local SI_DIALOG_ACCEPT = SI_DIALOG_ACCEPT
+local SI_DIALOG_DECLINE = SI_DIALOG_DECLINE
+local SI_GROUP_INVITE_RECEIVED = SI_GROUP_INVITE_RECEIVED
+local SLASH_COMMANDS = SLASH_COMMANDS
 local split2 = CyroDeal.split2
 local watch = CyroDeal.Watch
 local zo_callLater = zo_callLater
-local ZO_PreHook = ZO_PreHook
+local ZO_ControlPool = ZO_ControlPool
+local ZO_GetPrimaryPlayerNameWithSecondary = ZO_GetPrimaryPlayerNameWithSecondary
+-- local ZO_Dialogs_ShowDialog = ZO_Dialogs_ShowDialog
+local ZO_Dialogs_RegisterCustomDialog = ZO_Dialogs_RegisterCustomDialog
+-- local ZO_PreHook = ZO_PreHook
+local ZO_RadioButtonGroup = ZO_RadioButtonGroup
 
 setfenv(1, CyroDeal)
 local myname = "CyroGroup"
@@ -33,31 +48,37 @@ local log, lsc, saved
 
 local JUMP1 = 'JUMP_TO_GROUP_LEADER_WORLD_PROMPT'
 local JUMP2 = 'JUMP_TO_GROUP_LEADER_OCCURANCE_PROMPT'
+local gi = "CyroGroup/Group Invite"
+local gidialog
 
 local discord
 
 local hooked = false
 local suppress = false
-local function nodialog(name, data)
-    watch("nodialog", name, data)
-    if (name == JUMP1 or name == JUMP2) and suppress then
-	suppress = false
-	return true
+
+local curname, curdispname
+local function accept()
+    AcceptGroupInvite()
+    PLAYER_TO_PLAYER:RemoveFromIncomingQueue(INTERACT_TYPE_TRAVEL_TO_LEADER)
+
+    printf("accepted invite from %s", curname)
+end
+
+local function on_invite(_, charname, dispname)
+    PLAYER_TO_PLAYER:RemoveFromIncomingQueue(INTERACT_TYPE_GROUP_INVITE, charname, dispname)
+    watch("on_invite", charname, dispname)
+    curdispname = dispname
+    curname = ZO_GetPrimaryPlayerNameWithSecondary(dispname, charname)
+    if not saved.AutoAccept[charname] and not saved.AutoAccept[dispname] then
+	ZO_Dialogs_ShowDialog(gi, nil, {mainTextParams={curname}})
+    else
+	accept()
     end
 end
 
-
-local function on_invite(_, charname, displayname)
-    watch("on_invite", charname, displayname)
-    if saved.AutoAccept[charname] or saved.AutoAccept[displayname] then
-	suppress = true
-	if not hooked then
-	    ZO_PreHook("ZO_Dialogs_ShowDialog", nodialog)
-	    hooked = true
-	end
-	AcceptGroupInvite()
-	printf("accepted invite from %s", charname)
-    end
+local function alwaysaccept()
+    saved.AutoAccept[curdispname] = true
+    accept()
 end
 
 local function autoaccept(what)
@@ -222,6 +243,17 @@ local function lam()
     return a
 end
 
+function cg.ThreeButtonDialog_OnInitialized(self)
+    self.radioButtonGroup = ZO_RadioButtonGroup:New()
+    self.radioButtonPool = ZO_ControlPool:New("ZO_DialogRadioButton", self:GetNamedChild("RadioButtonContainer"), "RadioButton")
+
+    self.buttonControls = {}
+    local bg = GetControl(self, 'ButtonGroup')
+    for i = 1, 3 do
+	self.buttonControls[i] = GetControl(bg, 'Button' .. tostring(i))
+    end
+end
+
 function cg.Init(init)
     log, lsc, saved = init.log, init.lsc, init.saved
     discord = saved.Discord
@@ -230,7 +262,40 @@ function cg.Init(init)
     local aa = lsc:Register(autoaccept())
     aa:AddAlias('/cya')
     local l = lsc:Register(leave())
-    l:AddAlias('/leave')
+    if not SLASH_COMMANDS['/leave'] then
+	l:AddAlias('/leave')
+    end
+    gidialog = {
+	canQueue = true;
+	customControl = CyroGroup_ThreeButtonDialog,
+	mainText = {
+	    text = SI_GROUP_INVITE_RECEIVED
+	},
+	buttons = {
+	    {
+		enabled = true,
+		text = SI_DIALOG_ACCEPT,
+		keybind = "DIALOG_TERTIARY",
+		callback = accept,
+		visible = true
+	    },
+	    {
+		enabled = true,
+		text = SI_DIALOG_DECLINE,
+		keybind = "DIALOG_RESET",
+		callback = DeclineGroupInvite,
+		visible = true
+	    },
+	    {
+		enabled = true,
+		text = "Always",
+		keybind = "DIALOG_PRIMARY",
+		callback = alwaysaccept,
+		visible = true
+	    }
+	}
+    }
+    ZO_Dialogs_RegisterCustomDialog(gi, gidialog)
     return lam()
 end
 ZO_CreateStringId("SI_BINDING_NAME_CYRODEAL_SEND_DISCORD", "Send Discord Link")
