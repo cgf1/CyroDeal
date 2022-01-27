@@ -4,6 +4,7 @@ local GetAddOnManager = GetAddOnManager
 local GetUnitDisplayName = GetUnitDisplayName
 local LibChatMessage = LibChatMessage
 local ReloadUI = ReloadUI
+local SLASH_COMMANDS = SLASH_COMMANDS
 local zo_callLater = zo_callLater
 local ZO_SavedVars = ZO_SavedVars
 
@@ -234,7 +235,9 @@ local function init(_, name)
 	initvars = {chat = chat, itsme = itsme, log = log, lsc = lsc, saved = saved}
 	CyroDeal.Chat(initvars)
 	lsc:Register(cyrodeal())
-	lsc:Register(rrr())
+	if not SLASH_COMMANDS['/rrr'] then
+	    lsc:Register(rrr())
+	end
 	EVENT_MANAGER:RegisterForEvent(myname, EVENT_PLAYER_ACTIVATED, activated)
     end
 end
