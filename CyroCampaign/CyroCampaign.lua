@@ -126,6 +126,7 @@ local function cyq(what)
 	return "/cyq", cyq, "CyroDeal: Show position in Cyrodill queue"
     end
     local n = GetNumSelectionCampaigns()
+    local sawone = false
     for i = 1, n do
 	local id = GetSelectionCampaignId(i)
 	if id and id ~= 0 and (what == '' or GetCampaignName(id):lower() == what) then
@@ -140,9 +141,13 @@ local function cyq(what)
 		end
 		if pos then
 		    printf("%s%s queue position: %s", group(isgroup), GetCampaignName(id), tostring(pos))
+		    sawone = true
 		end
 	    end
 	end
+    end
+    if not sawone then
+	print("not queued?")
     end
 end
 
