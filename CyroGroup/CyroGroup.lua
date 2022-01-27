@@ -148,12 +148,12 @@ local function finddiscord()
 		local id = GetGuildId(i)
 		if GetGuildName(id) == guild then
 		    local desc = GetGuildDescription(id) .. GetGuildMotD(id)
-		    _, _, link = desc:find("(https://discord%.%S+)")
+		    _, _, link = desc:find("(https://discord%.[^%s|]+)")
 		    if not link then
 			message = "couldn't find discord info for guild \"%s\""
 		    else
-			link = string.format("Please join us on discord voice chat - %s (push-to-talk %srequired, microphone %srequired)", link,
-					      (discord.P2T and "") or "not ", (discord.Mic and "") or "not ");
+			link = string.format("Please join us on discord voice chat - %s .  Push-to-talk %srequired, microphone %srequired",
+					     link, (discord.P2T and "") or "not ", (discord.Mic and "") or "not ")
 		    end
 		    break
 		end
@@ -168,7 +168,6 @@ local function finddiscord()
 end
 
 function cg.SendText(n)
-    local channel = CHAT_CHANNEL_PARTY
     local message
     if n == 0 then
 	message = finddiscord()
@@ -266,7 +265,7 @@ function cg.Init(init)
 	l:AddAlias('/leave')
     end
     gidialog = {
-	canQueue = true;
+	canQueue = true,
 	customControl = CyroGroup_ThreeButtonDialog,
 	mainText = {
 	    text = SI_GROUP_INVITE_RECEIVED
