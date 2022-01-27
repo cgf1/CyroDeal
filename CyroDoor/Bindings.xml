@@ -1,6 +1,6 @@
 <Bindings>
     <Layer name="SI_KEYBINDINGS_LAYER_GENERAL">
-	<Category name="CyroDeal - Cyrodiil Stuff">
+	<Category name="CyroDeal(CyroDoor) - Show keep doors">
 	    <Action name="CYRODOOR_HOLDDOWN">
 		<Down>
 		    CyroDeal.CyroDoor.Show(true)

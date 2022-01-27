@@ -38,7 +38,6 @@ local gatehouses, posterns
 local myalliance
 local keepnames = {}
 
-local t = "esoui/art/floatingmarkers/repeatablequest_icon_door_assisted.dds"
 local where
 
 local function color(n, r, g, b, a)
@@ -473,7 +472,6 @@ function CyroDoor.SaveDefaults()
 end
 
 function CyroDoor.Init(init)
-    tprint(init)
     log, lsc, saved = init.log, init.lsc, init.saved
 
     -- CyroDoor.InitCoord(saved)
@@ -513,37 +511,6 @@ function CyroDoor.Init(init)
 	end
     end
     saved.keepnames = keepnames
-
-    SLASH_COMMANDS["/cdl"] = function(x)
-	local i = tonumber(x)
-	if i then
-	    for pintype in pairs(where) do
-		lmp:SetLayoutKey(pintype, "level", i)
-	    end
-	    lmp:RefreshPins(nil)
-	end
-    end
-
-    SLASH_COMMANDS["/cdw"] = function()
-	for pintype in pairs(where) do
-	    color(pintype, 1, 1, 1, 1)
-	end
-    end
-    SLASH_COMMANDS["/cdg"] = function()
-	for n in pairs(saved.coords.Cyrodiil) do
-	    color(x.pintype, 0, 1, 0, 1)
-	end
-    end
-    SLASH_COMMANDS["/cdb"] = function()
-	for pintype in pairs(where) do
-	    color(pintype, 0.2, 0.6, 1, 1)
-	end
-    end
-    SLASH_COMMANDS["/cdr"] = function()
-	for pintype in pairs(where) do
-	    color(pintype, 1, 0, 0, 1)
-	end
-    end
 end
 
 ZO_CreateStringId("SI_BINDING_NAME_CYRODOOR_HOLDDOWN", "Show/hide doors on keeps while key is depressed")
