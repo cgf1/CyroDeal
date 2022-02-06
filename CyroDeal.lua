@@ -2,7 +2,9 @@ local Chat = Chat
 local EVENT_MANAGER = EVENT_MANAGER
 local GetAddOnManager = GetAddOnManager
 local GetUnitDisplayName = GetUnitDisplayName
+local LibDebugLogger = LibDebugLogger
 local LibChatMessage = LibChatMessage
+local LibSlashCommander = LibSlashCommander
 local ReloadUI = ReloadUI
 local SLASH_COMMANDS = SLASH_COMMANDS
 local zo_callLater = zo_callLater
@@ -211,9 +213,10 @@ local function activated()
 	registerForRefresh = true
     }
     local LAM = LibAddonMenu2
-    panel = LAM:RegisterAddonPanel(myname .. ' Settings', paneldata)
+    local sname = myname .. ' Settings'
+    panel = LAM:RegisterAddonPanel(sname, paneldata)
 
-    LAM:RegisterOptionControls(myname, options)
+    LAM:RegisterOptionControls(sname, options)
     initvars.lsc:Register("/cyrodeal", function () LAM:OpenToPanel(panel) end)
 end
 
