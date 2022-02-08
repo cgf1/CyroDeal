@@ -19,6 +19,7 @@ local GetNumGuilds = GetNumGuilds
 local GetString = GetString
 local GetTimeStamp = GetTimeStamp
 local GetUnitDisplayName = GetUnitDisplayName
+local GetGroupLeaderUnitTag = GetGroupLeaderUnitTag
 local GetUnitZone = GetUnitZone
 local GroupLeave = GroupLeave
 local GUILD_SHARED_INFO = GUILD_SHARED_INFO
@@ -54,27 +55,37 @@ cl.CyroLeader = cl
 
 local log, lsc, saved
 local recordpvp
+local iam = GetUnitDisplayName("player")
 
 function cl.SaveDefaults()
-    return {GuildNotes = false}
+    return {tabard = false}
+end
+
+local function isleader()
+    local leadertag = GetGroupLeaderUnitTag()
+    if not leadertag then
+	return false
+    end
+    local dname = GetUnitDisplayName(leadertag)
+    return dname == iam
 end
 
 local function lam()
     local a = {{
 	type = "checkbox",
-	name = "Update Guild notes?",
-	tooltip = "Update guild note with current date with all guild members in your current Leader.  Uses current guild tabard to determine guild",
+	name = "Update Guild when wearing tabard?",
+	tooltip = "Only update guild notes with date when when wearing tabard",
 	getFunc = function()
-	    return saved.GuildNotes or false
+	    return saved.tabard or false
 	end,
 	setFunc = function(val)
-	    saved.GuildNotes = val
+	    saved.tabard = val
 	end
     }}
     return a
 end
 
-local function guildid()
+local function tabard_guid()
     local guild = GetItemCreatorName(0, EQUIP_SLOT_COSTUME)
     local n = GetNumGuilds()
     for i = 1, n do
@@ -83,29 +94,62 @@ local function guildid()
 	    return guid
 	end
     end
-    return nil
+    return -1
 end
 
 local updq = {}
+local group = {
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4},
+{1, 2, 3, 4}
+}
 local queued = false
 function queue()
     if #updq <= 0 then
 	queued = false
 	return
     end
-    local guid, guix, unit, pvpdate = unpack(table.remove(updq, 1))
-    local _, note = GetGuildMemberInfo(guid, guix)
-    if not note:find(pvpdate) then
-	if not IsUnitInGroupSupportRange(unit) then
-	    updq[#updq + 1] = {guid, guix}
-	else
-	    note = note:gsub("PVP:%d%d%d%d/%d%d/%d%d ?", "")
-	    if note:len() > 0 then
-		pvpdate = pvpdate .. " "
+    local guid, guix, unit, pvpdate = unpack(table.remove(updq))
+    printf("unqueued %s %s %s %s", tostring(guid), tostring(guix), tostring(unit), tostring(pvpdate))
+local guin = GetGuildName(guid)
+    if not saved.tabard or tabard_guid() == guid then
+	local name, note = GetGuildMemberInfo(guid, guix)
+printf("checking %s from %s", name, guin)
+	if not note or not note:find(pvpdate) then
+	    if not IsUnitInGroupSupportRange(unit) then
+		updq[#updq + 1] = {guid, guix}
+	    else
+		note = note:gsub("PVP:%d%d%d%d/%d%d/%d%d ?", "")
+		if note:len() > 0 then
+		    pvpdate = pvpdate .. " "
+		end
+printf("updated %s in %s", name, guin)
+		SetGuildMemberNote(guid, guix, pvpdate .. note)
 	    end
-printf("updated %d", guix)
-	    SetGuildMemberNote(guid, guix, pvpdate .. note)
+else printf("didn't update %s in %s", name, guin)
 	end
+
     end
     if #updq <= 0 then
 	printf("queue: %d", #updq)
@@ -125,16 +169,6 @@ dprint("not grouped")
 	return
     end
 
-    local guid = guildid()
-    if not guid then
-	count = count or 0
-	if count <= 60 then
-	    zo_callLater(function () update_guild_info(count + 1) end, 1000)
-	else
-	    printf("no guild tabard equipped after %d tries - guild notes not updated", count)
-	end
-	return
-    end
     if not IsInCyrodiil() then
 dprint("not in Cyrodiil")
 	return
@@ -149,18 +183,26 @@ printf("Group size %d, date %s", GetGroupSize(), pvpdate)
     for i = 1, GetGroupSize() do
 	local unit = GetGroupUnitTagByIndex(i)
 	local name = GetUnitDisplayName(unit)
-printf("considering %s %s seen:%s", tostring(name), GetUnitZone(unit), tostring(seen[name] or false))
 	if not seen[name] then
 	    seen[name] = true
-	    local guix = GetGuildMemberIndexFromDisplayName(guid, name)
-	    if guix then
-		updq[#updq + 1] = {guid, guix, unit, pvpdate}
+	    for guid, wantit in pairs(recordpvp) do
+		if wantit then
+		    local guix = GetGuildMemberIndexFromDisplayName(guid, name)
+		    if guix then
+
+			printf("queuing %s %s unit %s pvpdate:%s", tostring(name), GetUnitZone(unit), unit, pvpdate)
+			local g = group[i]
+			g[1], g[2], g[3], g[4] = guid, guix, unit, pvpdate
+			table.insert(updq, g)
+		    end
+		end
 	    end
 	end
     end
     if not queued and updqlen ~= #updq then
-print("kicking queue")
-	queue()
+print("starting queue")
+	zo_callLater(queue, 10000)
+	queued = true
     end
 end
 
@@ -169,6 +211,20 @@ function cyl(what)
 	return '/cyl', cyl, "CyroDeal: Refresh guild notes for group members in Cyrodiil"
     end
     update_guild_info(61)
+end
+
+local function spoof_cyrodiil(what)
+    if what == nil then
+	return '/cylcyrodiil', spoof_cyrodiil, "CyroDeal: Assert that we are actually in Cyrodiil"
+    end
+    IsInCyrodiil = function() return true end
+end
+
+local function spoof_isleader(what)
+    if what == nil then
+	return '/cylleader', spoof_isleader, "CyroDeal: Assert that we are the group leader"
+    end
+    isleader = function() return true end
 end
 
 function cl.Init(init)
@@ -190,15 +246,14 @@ function cl.Init(init)
     -- ZO_CheckButton_SetCheckState(button, true)
     local count = GetControl(GUILD_SHARED_INFO.control, "Count")
     count:SetHandler("OnTextChanged", function(self, currentFrameTimeSeconds)
-	local guildid = GUILD_SHARED_INFO.guildId
-	recordpvp[guildid] = recordpvp[guildid] or false
-printf("HERE %s %s", tostring(guildid), tostring(recordpvp[guildid]))
-	ZO_CheckButton_SetCheckState(button, recordpvp[guildid])
+	local guid = GUILD_SHARED_INFO.guildId
+	recordpvp[guid] = recordpvp[guid] or false
+	ZO_CheckButton_SetCheckState(button, recordpvp[guid])
     end)
     ZO_CheckButton_SetToggleFunction(button, function(control, checked)
-printf("GUILD ID %s", tostring(GUILD_SHARED_INFO.guildId))
 	saved.recordpvp[GUILD_SHARED_INFO.guildId] = checked
     end)
-    lsc:Register('/foo', function() ZO_CheckButton_SetCheckState(button, false) end, 'foo')
+    lsc:Register(spoof_cyrodiil())
+    lsc:Register(spoof_isleader())
     return lam()
 end
