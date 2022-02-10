@@ -58,7 +58,7 @@ local recordpvp
 local iam = GetUnitDisplayName("player")
 
 function cl.SaveDefaults()
-    return {tabard = false}
+    return {recordpvp = {}}
 end
 
 local function isleader()
@@ -73,7 +73,7 @@ end
 local function lam()
     local a = {{
 	type = "checkbox",
-	name = "Update Guild when wearing tabard?",
+	name = "Update Guild when wearing tabard (currently doesn't work)?",
 	tooltip = "Only update guild notes with date when when wearing tabard",
 	getFunc = function()
 	    return saved.tabard or false
@@ -85,132 +85,83 @@ local function lam()
     return a
 end
 
-local function tabard_guid()
-    local guild = GetItemCreatorName(0, EQUIP_SLOT_COSTUME)
-    local n = GetNumGuilds()
-    for i = 1, n do
-	local guid = GetGuildId(i)
-	if GetGuildName(guid) == guild then
-	    return guid
-	end
-    end
-    return -1
-end
-
-local updq = {}
-local group = {
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4},
-{1, 2, 3, 4}
-}
-local queued = false
-function queue()
-    if #updq <= 0 then
-	queued = false
-	return
-    end
-    local guid, guix, unit, pvpdate = unpack(table.remove(updq))
-    printf("unqueued %s %s %s %s", tostring(guid), tostring(guix), tostring(unit), tostring(pvpdate))
-local guin = GetGuildName(guid)
-    if not saved.tabard or tabard_guid() == guid then
-	local name, note = GetGuildMemberInfo(guid, guix)
-printf("checking %s from %s", name, guin)
-	if not note or not note:find(pvpdate) then
-	    if not IsUnitInGroupSupportRange(unit) then
-		updq[#updq + 1] = {guid, guix}
-	    else
-		note = note:gsub("PVP:%d%d%d%d/%d%d/%d%d ?", "")
-		if note:len() > 0 then
-		    pvpdate = pvpdate .. " "
-		end
-printf("updated %s in %s", name, guin)
-		SetGuildMemberNote(guid, guix, pvpdate .. note)
-	    end
-else printf("didn't update %s in %s", name, guin)
-	end
-
-    end
-    if #updq <= 0 then
-	printf("queue: %d", #updq)
-	queued = false
-    else
-	printf("resecheduling: %d", #updq)
-	zo_callLater(queue, 11000)
-	queued = true
-    end
-end
-
 local lastdate
+local running = false
 local seen = {}
-function update_guild_info(count)
+function update_guild_info()
     if not IsUnitGrouped('player') then
-dprint("not grouped")
+	dprint("not grouped")
 	return
     end
 
     if not IsInCyrodiil() then
-dprint("not in Cyrodiil")
+	dprint("not in Cyrodiil")
 	return
     end
+    if not running then
+print("scanning")
+	scan()
+    end
+end
+
+function scan()
     local pvpdate = string.format("PVP:%4d/%02d/%02d", GetDateElementsFromTimestamp(GetTimeStamp()))
     if pvpdate ~= lastdate then
 	lastdate = pvpdate
 	seen = {}
     end
-    local updqlen = #updq
 printf("Group size %d, date %s", GetGroupSize(), pvpdate)
+    local already_updated = false
+    local sawguild = false
     for i = 1, GetGroupSize() do
 	local unit = GetGroupUnitTagByIndex(i)
 	local name = GetUnitDisplayName(unit)
-	if not seen[name] then
-	    seen[name] = true
+	if seen[name] then
+print("seen", name)
+	else
 	    for guid, wantit in pairs(recordpvp) do
 		if wantit then
+		    sawguild = true
 		    local guix = GetGuildMemberIndexFromDisplayName(guid, name)
 		    if guix then
-
-			printf("queuing %s %s unit %s pvpdate:%s", tostring(name), GetUnitZone(unit), unit, pvpdate)
-			local g = group[i]
-			g[1], g[2], g[3], g[4] = guid, guix, unit, pvpdate
-			table.insert(updq, g)
+local guin = GetGuildName(guid)
+printf("checking %s %s, unit %s, guild %s pvpdate:%s, seen:%s", tostring(name), GetUnitZone(unit), unit, guin, pvpdate, tostring(seen[name] or false))
+			local _, note = GetGuildMemberInfo(guid, guix)
+			if note and note:find(pvpdate) then
+			    seen[name] = true
+printf("%s already updated with %s", name, pvpdate)
+			elseif not IsUnitInGroupSupportRange(unit) or already_updated then
+			    zo_callLater(scan, 10000)
+			    running = true
+			    return
+			else
+			    seen[name] = true
+			    note = note:gsub("PVP:%d%d%d%d/%d%d/%d%d ?", "")
+			    if note:len() > 0 then
+				pvpdate = pvpdate .. " "
+			    end
+printf("updated %s in %s", name, guin)
+			    SetGuildMemberNote(guid, guix, pvpdate .. note)
+			    already_updated = true
+			end
 		    end
 		end
 	    end
 	end
     end
-    if not queued and updqlen ~= #updq then
-print("starting queue")
-	zo_callLater(queue, 10000)
-	queued = true
+    if not sawguild then
+	print("Never saw a guild to register PVP attendance")
     end
+    running = false
 end
 
 function cyl(what)
     if what == nil then
 	return '/cyl', cyl, "CyroDeal: Refresh guild notes for group members in Cyrodiil"
     end
-    update_guild_info(61)
+    if not running then
+	update_guild_info()
+    end
 end
 
 local function spoof_cyrodiil(what)
@@ -235,6 +186,7 @@ function cl.Init(init)
     lam(init.options)
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_GROUP_UPDATE, function () update_guild_info() end)
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_GROUP_MEMBER_JOINED, function () update_guild_info() end)
+    EVENT_MANAGER:RegisterForEvent(myname, EVENT_GROUP_MEMBER_REMOVED, function () update_guild_info() end)
     update_guild_info()
     local ref = ZO_GuildRosterHideOffline
     -- local ref = ZO_GuildRosterSearchLabel,
