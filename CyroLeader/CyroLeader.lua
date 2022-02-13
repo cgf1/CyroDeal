@@ -1,6 +1,7 @@
 local CreateControlFromVirtual = CreateControlFromVirtual
 local dlater = CyroDeal.dlater
 local dprint = CyroDeal.dprint
+local d = d
 local EQUIP_SLOT_COSTUME = EQUIP_SLOT_COSTUME
 local error = CyroDeal.error
 local EVENT_MANAGER = EVENT_MANAGER
@@ -26,6 +27,7 @@ local GUILD_SHARED_INFO = GUILD_SHARED_INFO
 local IsInCyrodiil = IsInCyrodiil
 local IsUnitGrouped = IsUnitGrouped
 local IsUnitInGroupSupportRange = IsUnitInGroupSupportRange
+local lgr = LibGuildRoster
 local print = CyroDeal.print
 local printf = CyroDeal.printf
 local SetGuildMemberNote = SetGuildMemberNote
@@ -54,11 +56,14 @@ local cl = CyroLeader
 cl.CyroLeader = cl
 
 local log, lsc, saved
-local recordpvp
+local pvpguild
 local iam = GetUnitDisplayName("player")
 
+local pvppat = "^(PVP:%d%d%d%d/%d%d/%d%d ?)(.*)"
+local gcol
+
 function cl.SaveDefaults()
-    return {recordpvp = {}}
+    return {pvpguild = {}}
 end
 
 local function isleader()
@@ -99,7 +104,7 @@ function update_guild_info()
 	return
     end
     if not running then
-print("scanning")
+        dprint("scanning")
 	scan()
     end
 end
@@ -110,40 +115,38 @@ function scan()
 	lastdate = pvpdate
 	seen = {}
     end
-printf("Group size %d, date %s", GetGroupSize(), pvpdate)
+    dprintf("Group size %d, date %s", GetGroupSize(), pvpdate)
     local already_updated = false
     local sawguild = false
     for i = 1, GetGroupSize() do
 	local unit = GetGroupUnitTagByIndex(i)
 	local name = GetUnitDisplayName(unit)
 	if seen[name] then
-print("seen", name)
+        dprint("seen", name)
 	else
-	    for guid, wantit in pairs(recordpvp) do
-		if wantit then
-		    sawguild = true
-		    local guix = GetGuildMemberIndexFromDisplayName(guid, name)
-		    if guix then
-local guin = GetGuildName(guid)
+	    for _, guid in ipairs(pvpguild) do
+		sawguild = true
+		local guix = GetGuildMemberIndexFromDisplayName(guid, name)
+		if guix then
+		    local guin = GetGuildName(guid)
 printf("checking %s %s, unit %s, guild %s pvpdate:%s, seen:%s", tostring(name), GetUnitZone(unit), unit, guin, pvpdate, tostring(seen[name] or false))
-			local _, note = GetGuildMemberInfo(guid, guix)
-			if note and note:find(pvpdate) then
-			    seen[name] = true
+		    local _, note = GetGuildMemberInfo(guid, guix)
+		    if note and note:find('^' .. pvpdate) then
+			seen[name] = true
 printf("%s already updated with %s", name, pvpdate)
-			elseif not IsUnitInGroupSupportRange(unit) or already_updated then
-			    zo_callLater(scan, 10000)
-			    running = true
-			    return
-			else
-			    seen[name] = true
-			    note = note:gsub("PVP:%d%d%d%d/%d%d/%d%d ?", "")
-			    if note:len() > 0 then
-				pvpdate = pvpdate .. " "
-			    end
-printf("updated %s in %s", name, guin)
-			    SetGuildMemberNote(guid, guix, pvpdate .. note)
-			    already_updated = true
+		    elseif not IsUnitInGroupSupportRange(unit) or already_updated then
+			zo_callLater(scan, 10000)
+			running = true
+			return
+		    else
+			seen[name] = true
+			note = note:gsub(pvppat, "")
+			if note:len() > 0 then
+			    pvpdate = pvpdate .. " "
 			end
+			printf("updated %s in %s", name, guin)
+			SetGuildMemberNote(guid, guix, pvpdate .. note)
+			already_updated = true
 		    end
 		end
 	    end
@@ -151,6 +154,7 @@ printf("updated %s in %s", name, guin)
     end
     if not sawguild then
 	print("Never saw a guild to register PVP attendance")
+d("pvpguild", pvpguild)
     end
     running = false
 end
@@ -180,8 +184,9 @@ end
 
 function cl.Init(init)
     log, lsc, saved = init.log, init.lsc, init.saved
-    saved.recordpvp = saved.recordpvp or {}
-    recordpvp = saved.recordpvp
+    saved.pvpguild = saved.pvpguild or {}
+    pvpguild = saved.pvpguild
+    saved.recordpvp = nil
     lsc:Register(cyl())
     lam(init.options)
     EVENT_MANAGER:RegisterForEvent(myname, EVENT_GROUP_UPDATE, function () update_guild_info() end)
@@ -192,20 +197,61 @@ function cl.Init(init)
     -- local ref = ZO_GuildRosterSearchLabel,
     local button = CreateControlFromVirtual(nil, ref, "ZO_CheckButton")
     local text = CreateControlFromVirtual(nil, button, "ZO_CheckButtonLabel")
-    text:SetText("Record PVP attendance");
+    text:SetText("Record PVP");
     button:SetAnchor(TOPLEFT, ref, TOPLEFT, 0, -(text:GetHeight() + 2))
     text:SetAnchor(TOPLEFT, button, TOPRIGHT, 5, -2)
     -- ZO_CheckButton_SetCheckState(button, true)
     local count = GetControl(GUILD_SHARED_INFO.control, "Count")
     count:SetHandler("OnTextChanged", function(self, currentFrameTimeSeconds)
 	local guid = GUILD_SHARED_INFO.guildId
-	recordpvp[guid] = recordpvp[guid] or false
-	ZO_CheckButton_SetCheckState(button, recordpvp[guid])
+	local check = false
+	for _, g in ipairs(pvpguild) do
+	    if g  == guid then
+		check = true
+		break
+	    end
+	end
+	ZO_CheckButton_SetCheckState(button, check)
     end)
     ZO_CheckButton_SetToggleFunction(button, function(control, checked)
-	saved.recordpvp[GUILD_SHARED_INFO.guildId] = checked
+	local guid = GUILD_SHARED_INFO.guildId
+	local n
+	for i, g in ipairs(pvpguild) do
+	    if g == guid then
+		n = i
+		break
+	    end
+	end
+	if n and not checked then
+	    table.remove(pvpguild, n, 1)
+	    gcol:SetGuildFilter(pvpguild)
+	elseif not n and checked then
+	    table.insert(pvpguild, guid)
+	    gcol:SetGuildFilter(pvpguild)
+	end
     end)
     lsc:Register(spoof_cyrodiil())
     lsc:Register(spoof_isleader())
+    gcol = lgr:AddColumn({
+	key = myname,
+	width = 80,
+	guildFilter = pvpguild,
+	header = {
+	    title = 'PVPed',
+	    tootip = 'The time when a member was last seen in a group in Cyrodiil'
+	},
+	row = {
+	    data = function(gid, data, index)
+		local note = data.note
+		local _, _, pvp, rest = note:find(pvppat)
+		if not pvp then
+		    return ''
+		else
+		    note = rest
+		    return pvp:sub(5)
+		end
+	    end
+	}
+    })
     return lam()
 end

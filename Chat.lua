@@ -72,6 +72,14 @@ function dprint(...)
     end
 end
 
+function dprintf(...)
+    if not log then
+	df(...)
+    else
+	log:Warn(string.format(...))
+    end
+end
+
 function error(...)
     local vars = {...}
     local printfunc
