@@ -144,8 +144,11 @@ local function finddiscord()
 	    guild = ""
 	else
 	    local n = GetNumGuilds()
+print("XXX n", n)
+
 	    for i = 1, n do
 		local id = GetGuildId(i)
+print("GUILD", GetGuildName(id))
 		if GetGuildName(id) == guild then
 		    local desc = GetGuildDescription(id) .. GetGuildMotD(id)
 		    _, _, link = desc:find("(https://discord%.[^%s|]+)")
@@ -158,7 +161,9 @@ local function finddiscord()
 		    break
 		end
 	    end
-	    message = "couldn't find guild \"%s\" in your list of active guilds"
+	    if not link then
+		message = "couldn't find guild \"%s\" in your list of active guilds"
+	    end
 	end
 	if not link then
 	    error(message, guild)
