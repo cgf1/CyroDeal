@@ -1,8 +1,8 @@
 ## APIVersion: 100028 100029
+## AddonVersion: 01000
 ## Title: Show Keep Doors
 ## Author: |c66ffff|Valandil|r
 ## Description: CyroDeal - CyroDoor module for showing keep doors
-## AddonVersion 01000
 ## IsLibrary: false
 ## DependsOn: CyroDeal CustomCompassPins LibGPS LibMapPins-1.0
 
